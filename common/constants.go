@@ -10,7 +10,7 @@ package common
 // 	"github.com/google/uuid"
 // )
 
-var (
+const (
 	Version = "0.1.0"
 	Bulid   = "bata-0.0.4"
 )
