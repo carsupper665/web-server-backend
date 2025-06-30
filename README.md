@@ -89,3 +89,5 @@ CREATE_ROOT_USER=true
   Set to `false` to disable automatic user creation.
 
 ---
+## References
+- This project is inspired by [QuantumNous/new-api](https://github.com/QuantumNous/new-api)
