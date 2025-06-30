@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go-backend/common"
 	"go-backend/middleware"
+	"go-backend/model"
 	"go-backend/router"
 	"net/http"
 	"os"
@@ -34,6 +35,11 @@ func main() {
 	common.SetupLogger()
 	common.SysLog("Backend Server Engine | " + common.Version + "-" + common.Bulid + " started")
 	// init DB (use SQLite)
+
+	err = model.InitDB()
+	if err != nil {
+		common.FatalLog("failed to init DB: " + err.Error())
+	}
 
 	// init HTTP server
 	server := gin.New()
