@@ -1,4 +1,4 @@
-# Go Backend Prototype
+# Go Backend
 
 A lightweight backend service written in Go, created just for fun and experimentation.
 
