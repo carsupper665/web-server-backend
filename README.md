@@ -7,11 +7,10 @@ A lightweight backend service written in Go, created just for fun and experiment
 A simple backend application with the following features(P.S. All features are still under development and not yet fully functional.):
 - Login authentication
 - Identity management
-
-    To-do: 
-    - management
-    - Game server control
-    - Cloud storage
+- management
+- Game server control
+- Cloud storage
+- I'll think about it later. ;D
 
 ## Getting Started
 

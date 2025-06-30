@@ -34,6 +34,12 @@ func main() {
 	// Setup logger
 	common.SetupLogger()
 	common.SysLog("Backend Server Engine | " + common.Version + "-" + common.Bulid + " started")
+	if os.Getenv("DEBUG") != "true" { // gin 預設為 debug 所以要記得關
+		common.SysLog(common.ColorGreen + "Running in Release Mode" + common.ColorReset)
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		common.SysLog(common.ColorBrightCyan + "Debug mode is enabled, running in Debug Mode" + common.ColorReset)
+	}
 	// init DB (use SQLite)
 	err = model.InitDB()
 	if err != nil {
