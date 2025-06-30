@@ -79,18 +79,24 @@ func migrateDB() error {
 	return nil
 }
 
-func CheckRootUser() {
+// 之後搞一個可以第一次啟動跳註冊的東東，現在先自動創建
+// 改成有 error return
+func CheckRootUser() error {
 	createRoot := common.GetEnvOrDefaultBool("CREATE_ROOT_USER", true)
 	if !createRoot {
 		common.SysLog("CREATE_ROOT_USER disabled, skip root user check")
+		return nil
 	}
 
 	if RootUserExists() {
 		common.SysLog("Root user already exists, skip creating root user")
+		return nil
 	}
 
 	if err := createRootAccountForTest(); err != nil {
+		return err
 	}
 
 	common.SysLog("Root user created successfully")
+	return nil
 }

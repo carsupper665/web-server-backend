@@ -35,14 +35,19 @@ func main() {
 	common.SetupLogger()
 	common.SysLog("Backend Server Engine | " + common.Version + "-" + common.Bulid + " started")
 	// init DB (use SQLite)
-
 	err = model.InitDB()
 	if err != nil {
+		// fatal log 會自己關程序
 		common.FatalLog("failed to init DB: " + err.Error())
 	}
-
+	// check root user exists
+	err = model.CheckRootUser()
+	if err != nil {
+		common.SysError("failed to create root user: " + err.Error())
+	}
 	// init HTTP server
 	server := gin.New()
+	// CustomRecovery 這邊的作用是超大 exception 機制 如果API哪裡繃了可以防程序崩 再以json回傳問題
 	server.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
 		common.SysError(fmt.Sprintf("panic detected: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{

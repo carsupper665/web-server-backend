@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// 創表用，和新增用的結構
 type User struct {
 	ID               uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	Username         string         `gorm:"size:12;not null" json:"username"`
