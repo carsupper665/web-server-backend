@@ -82,7 +82,7 @@ func migrateDB() error {
 // 之後搞一個可以第一次啟動跳註冊的東東，現在先自動創建
 // 改成有 error return
 func CheckRootUser() error {
-	createRoot := common.GetEnvOrDefaultBool("CREATE_ROOT_USER", true)
+	createRoot := common.GetEnvOrDefaultBool("CREATE_ROOT_USER", false)
 	if !createRoot {
 		common.SysLog("CREATE_ROOT_USER disabled, skip root user check")
 		return nil

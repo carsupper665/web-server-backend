@@ -1,3 +1,4 @@
+// router/main.go
 package router
 
 import (
@@ -12,6 +13,7 @@ import (
 
 // buildFS embed.FS, indexPage []byte 暫時不需要 除非日後有需要 搞同源
 func SetRouter(router *gin.Engine) {
+	SetAPIRouter(router)
 
 	frontendBaseUrl := os.Getenv("FRONTEND_BASE_URL")
 

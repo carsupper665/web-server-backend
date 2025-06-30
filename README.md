@@ -80,7 +80,7 @@ CREATE_ROOT_USER=true
   The base URL where your frontend application is hosted (e.g. `http://localhost:3000`). This is used to configure CORS and generate links.
 
 - **PORT**  
-  The TCP port on which the Go HTTP server listens (default: `8080`).
+  The TCP port on which the Go HTTP server listens (default: `3000`).
 
 - **DEBUG**  
   When set to `true`, enables verbose logging and debug endpoints. Use `false` in production.

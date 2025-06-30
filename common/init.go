@@ -16,7 +16,6 @@ var (
 	CryptoSecret        = uuid.New().String()
 	SQLitePath          = "my-site.db?_busy_timeout=5000"
 	LogDir              = flag.String("log-dir", "./logs", "specify the log directory")
-	DebugEnabled        bool
 	MemoryCacheEnabled  bool
 	SyncFrequency       int
 	BatchUpdateInterval int
@@ -58,7 +57,7 @@ func LoadEnv() {
 	}
 
 	// Initialize variables from constants.go that were using environment variables
-	DebugEnabled = os.Getenv("DEBUG") == "true"
+	DebugMode = os.Getenv("DEBUG") == "true"
 	MemoryCacheEnabled = os.Getenv("MEMORY_CACHE_ENABLED") == "true"
 
 	// Initialize variables with GetEnvOrDefault

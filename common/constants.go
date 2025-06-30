@@ -12,11 +12,15 @@ package common
 
 const (
 	Version = "0.1.0"
-	Bulid   = ColorBrightYellow + "bata-0.0.5" + ColorReset
+	Bulid   = ColorBrightYellow + "bata-0.0.7" + ColorReset
 )
 
 const (
 	RequestIdKey = "F-User-Request-Id"
+)
+
+var (
+	DebugMode bool
 )
 
 const (
