@@ -4,7 +4,14 @@ A lightweight backend service written in Go, created just for fun and experiment
 
 ## Overview
 
-This is a proof-of-concept RESTful API implemented in Go. It’s intended as a simple playground to explore Go’s web frameworks, database pooling, configuration management, and user bootstrapping.
+A simple backend application with the following features(P.S. All features are still under development and not yet fully functional.):
+- Login authentication
+- Identity management
+
+    To-do: 
+    - management
+    - Game server control
+    - Cloud storage
 
 ## Getting Started
 
