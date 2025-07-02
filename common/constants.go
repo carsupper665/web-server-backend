@@ -12,7 +12,7 @@ package common
 
 const (
 	Version = "0.1.0"
-	Bulid   = ColorBrightYellow + "bata-0.0.7" + ColorReset
+	Bulid   = ColorBrightYellow + "bata-0.1.1c16" + ColorReset // c 代表我bulid幾次
 )
 
 const (
@@ -21,6 +21,7 @@ const (
 
 var (
 	DebugMode bool
+	UaFilter  bool
 )
 
 const (

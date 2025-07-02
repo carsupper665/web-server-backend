@@ -12,7 +12,7 @@ import (
 // 創表用，和新增用的結構
 type User struct {
 	ID               uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username         string         `gorm:"size:12;not null" json:"username"`
+	Username         string         `gorm:"size:12;not null;uniqueIndex" json:"username"`
 	DisplayName      string         `json:"display_name" gorm:"index" validate:"max=20"`
 	Role             int            `gorm:"default:1;not null" json:"role"`
 	Email            string         `gorm:"size:255;uniqueIndex;not null" json:"email"`
@@ -32,4 +32,38 @@ func RootUserExists() bool {
 		return false
 	}
 	return true
+}
+
+func LoginByName(username string) (User, error) {
+
+	var user User
+	err := DB.
+		Where("username = ?", username).
+		First(&user).
+		Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return User{}, err
+		}
+		return User{}, err
+	}
+	return user, nil
+}
+
+// LoginByEmail retrieves a user by email.
+// It only does the DB lookup; password verification should be done elsewhere.
+func LoginByEmail(email string) (User, error) {
+
+	var user User
+	err := DB.
+		Where("email = ?", email).
+		First(&user).
+		Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return User{}, err
+		}
+		return User{}, err
+	}
+	return user, nil
 }

@@ -59,6 +59,7 @@ func LoadEnv() {
 	// Initialize variables from constants.go that were using environment variables
 	DebugMode = os.Getenv("DEBUG") == "true"
 	MemoryCacheEnabled = os.Getenv("MEMORY_CACHE_ENABLED") == "true"
+	UaFilter = os.Getenv("UA_FILTER") == "true"
 
 	// Initialize variables with GetEnvOrDefault
 	SyncFrequency = GetEnvOrDefault("SYNC_FREQUENCY", 60)
