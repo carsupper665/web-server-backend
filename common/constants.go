@@ -11,18 +11,37 @@ package common
 // )
 
 const (
-	Version = "0.1.0"
-	Bulid   = ColorBrightYellow + "bata-0.1.1c16" + ColorReset // c 代表我bulid幾次
+	Version    = "0.1.0"
+	Bulid      = ColorBrightYellow + "bata-1.0.3c38r4" + ColorReset // c 代表我bulid幾次
+	SystemName = "Server Controller"
+)
+
+const (
+	JwtCookieName    = "au4ul4"
+	JwtExpireSeconds = 24 * 60 * 60 * 7
 )
 
 const (
 	RequestIdKey = "F-User-Request-Id"
 )
+const keyChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var (
 	DebugMode bool
 	UaFilter  bool
 )
+
+var SMTPServer string
+var SMTPPort int
+var SMTPSSLEnabled bool
+var SMTPAccount string
+var SMTPFrom string
+var SMTPToken string
+
+var EmailLoginAuthServerList = []string{
+	"smtp.sendcloud.net",
+	"smtp.azurecomm.net",
+}
 
 const (
 	RoleGuestUser  = 0

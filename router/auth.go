@@ -17,9 +17,11 @@ func SetAuthRouter(router *gin.Engine) {
 	auth.Use(
 		gzip.Gzip(gzip.DefaultCompression),
 		middleware.UserAgentFilter(),
+		middleware.GloabalIPFilter(),
 	)
 	{
 		auth.POST("/login", controller.Login)
+		auth.POST("/verify", controller.VerifyLogin)
 	}
 
 }

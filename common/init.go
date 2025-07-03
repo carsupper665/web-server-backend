@@ -65,4 +65,14 @@ func LoadEnv() {
 	SyncFrequency = GetEnvOrDefault("SYNC_FREQUENCY", 60)
 	BatchUpdateInterval = GetEnvOrDefault("BATCH_UPDATE_INTERVAL", 5)
 	RelayTimeout = GetEnvOrDefault("RELAY_TIMEOUT", 0)
+	SetUpSMTP()
+}
+
+func SetUpSMTP() {
+	SMTPServer = GetEnvOrDefaultString("SMTP_SERVER", "")
+	SMTPPort = GetEnvOrDefault("SMTP_PORT", 587)
+	SMTPSSLEnabled = GetEnvOrDefaultBool("SMTP_SSL_ENABLED", false)
+	SMTPAccount = GetEnvOrDefaultString("SMTP_ACCOUNT", "")
+	SMTPFrom = GetEnvOrDefaultString("SMTP_FROM", "")
+	SMTPToken = GetEnvOrDefaultString("SMTP_TOKEN", "")
 }

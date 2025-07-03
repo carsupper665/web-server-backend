@@ -32,6 +32,7 @@ func createRootAccountForTest() error {
 		rootUser := User{
 			Username:    "root",
 			Password:    hashedPassword,
+			Email:       common.GetEnvOrDefaultString("ROOT_USER_EMAIL", ""),
 			Role:        common.RoleRootUser,
 			DisplayName: "Root User",
 			AccessToken: nil,
@@ -70,6 +71,9 @@ func InitDB() error {
 func migrateDB() error {
 	err := DB.AutoMigrate(
 		&User{},
+		&UserDevice{},
+		&BlockedIP{},
+		&LoginAttempt{},
 	)
 
 	if err != nil {

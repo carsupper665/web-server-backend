@@ -4,15 +4,50 @@ package middleware
 
 import (
 	"go-backend/common"
+	"go-backend/model"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GenToken() string {
-	// 產生JWT並返回
-	return "generated_token"
+const (
+	FailLimit  = 5
+	FailWindow = 5 * time.Minute
+)
+
+func GloabalIPFilter() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		isBanned, err := model.IsIPBanned(ip)
+
+		if err != nil {
+			c.Abort()
+			return
+		}
+
+		if isBanned {
+			common.LogDebug(c.Request.Context(), "Blocked IP: "+ip)
+			c.AbortWithStatus(403)
+			return
+		}
+
+		windowStart := time.Now().Add(-FailWindow)
+		fails, err := model.CountRecentFails(ip, windowStart)
+		if err != nil {
+			common.LogError(c.Request.Context(), "CountRecentFails error: "+err.Error())
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+			return
+		}
+		if fails >= FailLimit {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many login attempts."})
+			_ = model.BanIP(ip, "Too many login or verify attempts")
+			return
+		}
+
+		c.Next()
+	}
 }
 
 // 初步過濾掉一些簡易爬蟲 只允許各大宗瀏覽器(但不含edge)

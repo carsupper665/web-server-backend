@@ -4,6 +4,8 @@ package router
 
 import (
 	"go-backend/controller"
+	"go-backend/middleware"
+
 	// "go-backend/middleware"
 
 	"github.com/gin-contrib/gzip"
@@ -12,9 +14,11 @@ import (
 
 func SetAPIRouter(router *gin.Engine) {
 	api := router.Group("/api")
-	api.Use(gzip.Gzip(gzip.DefaultCompression))
+	api.Use(gzip.Gzip(gzip.DefaultCompression),
+		middleware.GloabalIPFilter())
 	{
 		api.GET(("/test-Server"), controller.TestServer)
+		api.POST("/logout", controller.Logout)
 	}
 
 }

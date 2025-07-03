@@ -13,6 +13,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -71,6 +73,15 @@ func main() {
 	// init middleware
 
 	// init session store
+	store := cookie.NewStore([]byte(common.SessionSecret))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   2592000, // 30 days
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
+	server.Use(sessions.Sessions("session", store))
 	// set router
 	router.SetRouter(server)
 	// get port and start server
