@@ -12,7 +12,7 @@ package common
 
 const (
 	Version    = "0.1.0"
-	Bulid      = ColorBrightYellow + "bata-1.0.3c38r4" + ColorReset // c 代表我bulid幾次
+	Bulid      = ColorBrightYellow + "bata-1.0.4c1" + ColorReset // c 代表我bulid幾次
 	SystemName = "Server Controller"
 )
 

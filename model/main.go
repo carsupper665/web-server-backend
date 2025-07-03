@@ -2,7 +2,9 @@
 package model
 
 import (
+	"errors"
 	"go-backend/common"
+
 	// "os"
 	// "strings"
 	// "sync"
@@ -25,6 +27,10 @@ func createRootAccountForTest() error {
 	//if user.Status != common.UserStatusEnabled {
 	if err := DB.First(&user).Error; err != nil {
 		common.SysLog("no user exists, create a root user for you: username is root, password is 123456")
+		userEmail := common.GetEnvOrDefaultString("ROOT_USER_EMAIL", "")
+		if userEmail == "" {
+			return errors.New("ROOT_USER_EMAIL is not set, please set it in .env file")
+		}
 		hashedPassword, err := common.Password2Hash("123456")
 		if err != nil {
 			return err
@@ -32,7 +38,7 @@ func createRootAccountForTest() error {
 		rootUser := User{
 			Username:    "root",
 			Password:    hashedPassword,
-			Email:       common.GetEnvOrDefaultString("ROOT_USER_EMAIL", ""),
+			Email:       userEmail,
 			Role:        common.RoleRootUser,
 			DisplayName: "Root User",
 			AccessToken: nil,
