@@ -114,7 +114,6 @@ func CreateVerificationCode(c *gin.Context, user model.User) {
 	if err != nil {
 		if err.Error() == "verification code already set and not expired" {
 			return
-
 		}
 		common.LogError(c.Request.Context(), "SetVerificationCode error: "+err.Error())
 		return
@@ -126,23 +125,58 @@ func CreateVerificationCode(c *gin.Context, user model.User) {
 	<head>
 	<meta charset="UTF-8">
 	<title>Verification Code</title>
+	<style>
+		body {
+		margin: 0;
+		padding: 0;
+		font-family: sans-serif;
+		line-height: 1.4;
+		background: linear-gradient(-45deg,
+			#ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+		background-size: 400%% 400%%;
+		animation: rainbow 15s ease infinite;
+		}
+		@keyframes rainbow {
+		0%%   { background-position: 0%% 50%%; }
+		50%%  { background-position: 100%% 50%%; }
+		100%% { background-position: 0%% 50%%; }
+		}
+		.container {
+		padding: 20px;
+		background: rgba(255, 255, 255, 0.8);
+		margin: 40px auto;
+		max-width: 600px;
+		border-radius: 8px;
+		}
+		p { margin: 1em 0; }
+	</style>
 	</head>
-	<body style="font-family: sans-serif; line-height:1.4;">
-	<p>Hello %s,</p>
-	<p>Your verification code is: <strong>%s</strong></p>
-	<p>
+	<body>
+	<div class="container">
+		<p>Hello %s,</p>
+		<p>Your verification code is: <strong>%s</strong></p>
+		<p>
 		Please use this code to verify your login. 
 		This code will expire in <strong>5 minutes</strong>.
-	</p>
-	<p>If you did not request this, please ignore this email.</p>
-	<br>
-	<p>Thank you,<br>The %s Team</p>
+		</p>
+		<p>If you did not request this, please ignore this email.</p>
+		<br>
+		<p>Thank you,<br>The %s Team</p>
+	</div>
 	</body>
 	</html>`,
 		user.DisplayName,
 		code,
 		common.SystemName,
 	)
+
+	email := user.Email
+
+	if email == "" || email == "null" {
+		common.LogError(c.Request.Context(), "User email is empty for user: "+user.Username)
+	}
+
+	common.LogDebug(c.Request.Context(), "Sending verification code to user: "+user.Username+" Email: "+email)
 
 	err = common.SendEmail(
 		"Login Verification Code",
