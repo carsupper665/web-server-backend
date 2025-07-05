@@ -65,13 +65,13 @@ func Login(c *gin.Context) {
 		c.JSON(401, gin.H{"error": "Invalid password"})
 		return
 	}
-	device := c.GetHeader("User-Agent")
+	UA := c.GetHeader("User-Agent")
 	now := time.Now()
 	msg := fmt.Sprintf(
-		"User: %s, IP: %s, Device: %s login at %s",
+		"User: %s, IP: %s, User-Agent: %s login at %s",
 		user.Username,
 		clientIP,
-		device,
+		UA,
 		now.Format("2006/01/02-15:04:05"),
 	)
 	common.LogDebug(c.Request.Context(), msg)
@@ -164,7 +164,6 @@ func CreateVerificationCode(c *gin.Context, user model.User) {
 		false, // secure (https 才送)
 		true,  // httpOnly
 	)
-	return
 }
 
 func VerifyLogin(c *gin.Context) {
@@ -206,7 +205,7 @@ func VerifyLogin(c *gin.Context) {
 	}
 	_ = model.ReSetFail(clientIP)
 	_ = model.ClearVerificationCode(email) // 重置驗證碼
-	user, err := model.GetUserByEmail(email)
+	user, _ := model.GetUserByEmail(email)
 	SetUpJWT(c, user)
 }
 
@@ -226,6 +225,18 @@ func SetUpJWT(c *gin.Context, user model.User) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	clinetDeviceID, _ := c.Cookie("device_id")
+
+	ua := c.GetHeader("User-Agent")
+
+	ip := c.ClientIP()
+
+	model.SaveDevice(
+		clinetDeviceID,
+		ua,
+		ip,
+		user.ID)
 
 	c.SetCookie(
 		common.JwtCookieName,    // name
