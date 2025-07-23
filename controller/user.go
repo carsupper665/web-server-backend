@@ -217,15 +217,15 @@ func VerifyLogin(c *gin.Context) {
 		return
 	}
 
-	email, err := c.Cookie("email")
-	if err != nil {
+	email, err2 := c.Cookie("email")
+	if err2 != nil {
 		common.LogError(c.Request.Context(), "Failed to get email from cookie: "+err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request."})
 		return
 	}
 
-	code, sendAt, err := model.GetVerificationCode(email)
-	if err != nil {
+	code, sendAt, ver_err := model.GetVerificationCode(email)
+	if ver_err != nil {
 		common.LogError(c.Request.Context(), "Verify Error"+err.Error())
 		_ = model.RecordAttempt(clientIP, false)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})

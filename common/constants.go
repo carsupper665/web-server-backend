@@ -12,7 +12,7 @@ package common
 
 const (
 	Version    = "0.1.0"
-	Bulid      = ColorBrightYellow + "bata-1.1.0c18" + ColorReset
+	Bulid      = ColorBrightYellow + "bata-1.1.0c19" + ColorReset
 	SystemName = "Server Controller"
 )
 
