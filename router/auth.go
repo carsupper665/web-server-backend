@@ -7,6 +7,7 @@ import (
 	"go-backend/middleware"
 
 	// "go-backend/middleware"
+	"go-backend/common"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ func SetAuthRouter(router *gin.Engine) {
 	auth := router.Group("/Authentication")
 	auth.Use(
 		gzip.Gzip(gzip.DefaultCompression),
+		middleware.IpRateLimiter(common.GlobalApiRateLimitNum, common.GlobalApiRateLimitDuration),
 		middleware.UserAgentFilter(),
 		middleware.GloabalIPFilter(),
 	)

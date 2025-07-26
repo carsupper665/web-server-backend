@@ -76,12 +76,12 @@ func Login(c *gin.Context) {
 	)
 	common.LogDebug(c.Request.Context(), msg)
 	_ = model.ReSetFail(clientIP)
-	clinetDeviceID, err := c.Cookie("device_id")
+	clientDeviceID, err := c.Cookie("device_id")
 	if err != nil {
-		clinetDeviceID = common.GenerateDeviceIDWithIP(clientIP)
+		clientDeviceID = common.GenerateDeviceIDWithIP(clientIP)
 		c.SetCookie( // 先寫進餅乾裡 下次直接取
 			"device_id",    // name
-			clinetDeviceID, // value
+			clientDeviceID, // value
 			60*60*24*365,   // maxAge (秒)：一年
 			"/",            // path
 			"",             // domain (留空為當前 host)
@@ -93,7 +93,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	// 檢查是否已存在此裝置的登入紀錄
-	isExists, _ := model.IsDeviceExists(clinetDeviceID)
+	isExists, _ := model.IsDeviceExists(clientDeviceID)
 	if !isExists { //不存在就跑email 驗證
 		CreateVerificationCode(c, user) // 發送驗證碼
 		c.JSON(202, gin.H{"message": "verification code sent"})
@@ -234,7 +234,7 @@ func VerifyLogin(c *gin.Context) {
 
 	if code != req.Code || time.Since(sendAt) > 5*time.Minute {
 		_ = model.RecordAttempt(clientIP, false)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired verification code" + code + " " + req.Code})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired verification code"})
 		return
 	}
 	_ = model.ReSetFail(clientIP)
@@ -260,14 +260,14 @@ func SetUpJWT(c *gin.Context, user model.User) {
 		return
 	}
 
-	clinetDeviceID, _ := c.Cookie("device_id")
+	clientDeviceID, _ := c.Cookie("device_id")
 
 	ua := c.GetHeader("User-Agent")
 
 	ip := c.ClientIP()
 
 	model.SaveDevice(
-		clinetDeviceID,
+		clientDeviceID,
 		ua,
 		ip,
 		user.ID)

@@ -35,7 +35,7 @@ func main() {
 	common.LoadEnv()
 	// Setup logger
 	common.SetupLogger()
-	common.SysLog("Backend Server Engine | " + common.Version + "-" + common.Bulid + " started")
+	common.SysLog("Backend Server Engine | " + common.Version + "-" + common.Build + " started")
 	if os.Getenv("DEBUG") != "true" { // gin 預設為 debug 所以要記得關
 		common.SysLog(common.ColorGreen + "Running in Release Mode" + common.ColorReset)
 		gin.SetMode(gin.ReleaseMode)
@@ -58,11 +58,14 @@ func main() {
 	// CustomRecovery 這邊的作用是超大 exception 機制 如果API哪裡繃了可以防程序崩 再以json回傳問題
 	server.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
 		common.SysError(fmt.Sprintf("panic detected: %v", err))
+		err = common.SendErrorToDc(fmt.Sprintf("Panic detected: %v", err))
+		if err != nil {
+			common.SysError(fmt.Sprintf("Failed to send error to Discord: %v", err))
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": gin.H{
 				"message": fmt.Sprintf("Unknow Error: %v", err),
 				"type":    "unknow_panic",
-				"status":  500,
 			},
 		})
 	}))

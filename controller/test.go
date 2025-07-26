@@ -24,3 +24,7 @@ func TestServer(c *gin.Context) {
 	}
 
 }
+
+func ErrorTest(c *gin.Context) {
+	panic("This is a test panic to check error handling.")
+}

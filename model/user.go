@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// 創表用，和新增用的結構
 type User struct {
 	ID                 uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	Username           string         `gorm:"size:12;not null;uniqueIndex" json:"username"`
@@ -25,6 +24,13 @@ type User struct {
 	CreatedAt          time.Time      `json:"created_at"`
 	UpdatedAt          time.Time      `json:"updated_at"`
 	DeletedAt          gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+type UserMinecraftServer struct {
+	OnwerID    uint      `gorm:"primaryKey;not null" json:"owner_id"`
+	ServerID   string    `gorm:"primaryKey;size:32;not null" json:"server_id"`
+	SystemPath string    `gorm:"size:255;not null" json:"system_path"`
+	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
 }
 
 type UserDevice struct {

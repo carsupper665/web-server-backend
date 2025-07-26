@@ -8,8 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const keyChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
 func RequestId() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := common.GetTimeString() + common.GetRandomString(6)

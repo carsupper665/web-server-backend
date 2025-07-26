@@ -12,7 +12,7 @@ package common
 
 const (
 	Version    = "0.1.0"
-	Bulid      = ColorBrightYellow + "bata-1.1.0c19" + ColorReset
+	Build      = ColorBrightYellow + "bata-1.1.2c5" + ColorReset
 	SystemName = "Server Controller"
 )
 
@@ -37,6 +37,11 @@ var SMTPSSLEnabled bool
 var SMTPAccount string
 var SMTPFrom string
 var SMTPToken string
+
+var (
+	GlobalApiRateLimitNum      int
+	GlobalApiRateLimitDuration int64
+)
 
 var EmailLoginAuthServerList = []string{
 	"smtp.sendcloud.net",

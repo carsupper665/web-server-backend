@@ -14,7 +14,7 @@ var (
 	Port                = flag.Int("port", 3000, "the listening port")
 	SessionSecret       = uuid.New().String()
 	CryptoSecret        = uuid.New().String()
-	SQLitePath          = "my-site.db?_busy_timeout=5000"
+	SQLitePath          = "DB.db?_busy_timeout=5000"
 	LogDir              = flag.String("log-dir", "./logs", "specify the log directory")
 	MemoryCacheEnabled  bool
 	SyncFrequency       int
@@ -65,6 +65,9 @@ func LoadEnv() {
 	SyncFrequency = GetEnvOrDefault("SYNC_FREQUENCY", 60)
 	BatchUpdateInterval = GetEnvOrDefault("BATCH_UPDATE_INTERVAL", 5)
 	RelayTimeout = GetEnvOrDefault("RELAY_TIMEOUT", 0)
+
+	GlobalApiRateLimitNum = GetEnvOrDefault("GLOBAL_API_RATE_LIMIT", 60)
+	GlobalApiRateLimitDuration = int64(GetEnvOrDefault("GLOBAL_API_RATE_LIMIT_DURATION", 60))
 	SetUpSMTP()
 }
 

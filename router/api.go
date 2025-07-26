@@ -3,6 +3,7 @@
 package router
 
 import (
+	"go-backend/common"
 	"go-backend/controller"
 	"go-backend/middleware"
 
@@ -15,6 +16,7 @@ import (
 func SetAPIRouter(router *gin.Engine) {
 	api := router.Group("/api")
 	api.Use(gzip.Gzip(gzip.DefaultCompression),
+		middleware.IpRateLimiter(common.GlobalApiRateLimitNum, common.GlobalApiRateLimitDuration),
 		middleware.GloabalIPFilter())
 	{
 		api.GET(("/test-Server"), controller.TestServer)

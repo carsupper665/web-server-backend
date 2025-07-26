@@ -79,8 +79,10 @@ func migrateDB() error {
 	err := DB.AutoMigrate(
 		&User{},
 		&UserDevice{},
+		&UserMinecraftServer{},
 		&BlockedIP{},
 		&LoginAttempt{},
+		&Book{},
 	)
 
 	if err != nil {
