@@ -2,6 +2,7 @@
 package common
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -68,7 +69,12 @@ func LoadEnv() {
 
 	GlobalApiRateLimitNum = GetEnvOrDefault("GLOBAL_API_RATE_LIMIT", 60)
 	GlobalApiRateLimitDuration = int64(GetEnvOrDefault("GLOBAL_API_RATE_LIMIT_DURATION", 60))
+	DCWebHookUrl = GetEnvOrDefaultString("DC_WEBHOOK_URL", "")
+	LatestFabricLoaderVersion = GetEnvOrDefaultString("LATEST_FABRIC_LOADER_VERSION", "")
+	LatestFabricInstallerVersion = GetEnvOrDefaultString("LATEST_FABRIC_INSTALLER_VERSION", "")
+	MinecraftServerPath = GetEnvOrDefaultString("MINECRAFT_SERVER_PATH", "./minecraft_servers")
 	SetUpSMTP()
+	LoadVanillaServerUrls()
 }
 
 func SetUpSMTP() {
@@ -78,4 +84,17 @@ func SetUpSMTP() {
 	SMTPAccount = GetEnvOrDefaultString("SMTP_ACCOUNT", "")
 	SMTPFrom = GetEnvOrDefaultString("SMTP_FROM", "")
 	SMTPToken = GetEnvOrDefaultString("SMTP_TOKEN", "")
+}
+
+func LoadVanillaServerUrls() {
+	// 讀取檔案
+	data, err := os.ReadFile("common/minecraft-server-jar-downloads.json")
+	if err != nil {
+		log.Fatalf("無法讀取 JSON 檔案: %v", err)
+	}
+
+	// 解析 JSON 到 map
+	if err := json.Unmarshal(data, &VanillaServerUrl); err != nil {
+		log.Fatalf("JSON 解析失敗: %v", err)
+	}
 }

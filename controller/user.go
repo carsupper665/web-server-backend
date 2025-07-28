@@ -19,6 +19,11 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+func clearCookies(c *gin.Context) {
+	c.SetCookie(common.JwtCookieName, "", -1, "/", "", false, true)
+	c.SetCookie("email", "", -1, "/", "", false, true)
+}
+
 func Login(c *gin.Context) {
 	var req loginRequest
 	var user model.User
@@ -245,11 +250,14 @@ func VerifyLogin(c *gin.Context) {
 
 func SetUpJWT(c *gin.Context, user model.User) {
 
+	exp := time.Now().Add(common.JwtExpireSeconds * time.Second).Unix()
+
 	payload := map[string]interface{}{
-		"user_id":  user.ID,
+		"user_id":  fmt.Sprint(user.ID),
 		"username": user.Username,
 		"role":     user.Role,
 		"Login_IP": c.ClientIP(),
+		"exp":      exp,
 	}
 
 	t, err := common.GenerateJWTToken(payload)
@@ -275,27 +283,20 @@ func SetUpJWT(c *gin.Context, user model.User) {
 	c.SetCookie(
 		common.JwtCookieName,    // name
 		t,                       // value
-		common.JwtExpireSeconds, // maxAge (秒)：7天
+		common.JwtExpireSeconds, // maxAge
 		"/",                     // path
 		"",                      // domain (留空為當前 host)
 		false,                   // secure (https 才送)
 		true,                    // httpOnly
 	)
+
+	c.SetCookie("email", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful"})
 }
 
 func Logout(c *gin.Context) {
 	// 清除 JWT Cookie
-	c.SetCookie(
-		common.JwtCookieName, // name
-		"",                   // value
-		-1,                   // maxAge (負值表示刪除)
-		"/",                  // path
-		"",                   // domain (留空為當前 host)
-		false,                // secure (https 才送)
-		true,                 // httpOnly
-	)
-
+	clearCookies(c)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }

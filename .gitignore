@@ -28,6 +28,7 @@ go.work.sum
 # env file
 .env
 logs/*
+minecraft_servers/*
 # Editor/IDE
 # .idea/
 # .vscode/

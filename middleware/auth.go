@@ -50,6 +50,18 @@ func GloabalIPFilter() gin.HandlerFunc {
 	}
 }
 
+func DebugMode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if common.DebugMode {
+			common.LogWarn(c.Request.Context(), "Warn: Debug mode is enabled, allowing all test requests.")
+			c.Next()
+		} else {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+	}
+}
+
 // 初步過濾掉一些簡易爬蟲 只允許各大宗瀏覽器(但不含edge)
 func UserAgentFilter() gin.HandlerFunc {
 	// 定義允許的瀏覽器關鍵字
@@ -91,5 +103,23 @@ func UserAgentFilter() gin.HandlerFunc {
 
 		// 其他一律拒絕
 		c.Abort()
+	}
+}
+
+func ValidateJWT() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, err := c.Cookie(common.JwtCookieName)
+		if err != nil || token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		Valid := common.ValidateUser(token, c.ClientIP())
+		if !Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		c.Next()
 	}
 }

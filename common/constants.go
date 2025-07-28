@@ -12,7 +12,7 @@ package common
 
 const (
 	Version    = "0.1.0"
-	Build      = ColorBrightYellow + "bata-1.1.2c5" + ColorReset
+	Build      = ColorBrightYellow + "bata-1.1.6c14 " + ColorReset
 	SystemName = "Server Controller"
 )
 
@@ -25,10 +25,21 @@ const (
 	RequestIdKey = "F-User-Request-Id"
 )
 const keyChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const NumberChars = "0123456789"
 
 var (
 	DebugMode bool
 	UaFilter  bool
+)
+
+var DCWebHookUrl string
+
+//minecraft server constants
+var (
+	LatestFabricLoaderVersion    string
+	LatestFabricInstallerVersion string
+	MinecraftServerPath          string
+	VanillaServerUrl             map[string]string
 )
 
 var SMTPServer string

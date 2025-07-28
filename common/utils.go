@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -20,14 +21,48 @@ func GetRandomString(length int) string {
 	return string(key)
 }
 
+func GetRandomIntString(length int) string {
+	key := make([]byte, length)
+	for i := 0; i < length; i++ {
+		key[i] = NumberChars[rand.Intn(10)] // 只使用數字
+	}
+	return string(key)
+}
+
 func GetTimeString() string {
 	now := time.Now()
 	return fmt.Sprintf("%s%d", now.Format("20060102150405"), now.UnixNano()%1e9)
 }
 
+func DownloadFile(dest, url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("http get %s error: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("bad status downloading %s: %s", url, resp.Status)
+	}
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("create file %s error: %w", dest, err)
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		return fmt.Errorf("writing to %s error: %w", dest, err)
+	}
+	return nil
+}
+
 func SendErrorToDc(msg string) error {
 	// 1. Webhook URL（請替換成你的 URL）
-	url := "https://discord.com/api/webhooks/1398746978392997989/tCR8awM_NhMUFsTwC9pzif6nqw381V50xqOcyOhIitGxfEyzV1p2VHST61JefwJyhiIV"
+	url := DCWebHookUrl
+	if url == "" {
+		return fmt.Errorf("Discord webhook URL is not set")
+	}
 
 	// 2. 準備要傳送的 JSON 負載
 	payload := map[string]string{
@@ -60,7 +95,5 @@ func SendErrorToDc(msg string) error {
 		respBody, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("webhook send failed: status %d, body: %s", resp.StatusCode, string(respBody))
 	}
-
-	fmt.Printf("Successfully sent message: %s\n", msg)
 	return nil
 }

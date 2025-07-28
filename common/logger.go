@@ -92,6 +92,14 @@ func SysError(s string) {
 	_, _ = fmt.Fprintf(gin.DefaultErrorWriter, "\033[31m[SYS] %v | %s \n\033[0m", t.Format("2006/01/02 - 15:04:05"), s)
 }
 
+func SysDebug(s string) {
+	if !DebugMode {
+		return
+	}
+	t := time.Now()
+	_, _ = fmt.Fprintf(gin.DefaultWriter, ColorBrightBlue+"[SYS-DEBUG]%s %v | %s \n", ColorReset, t.Format("2006/01/02 - 15:04:05"), s)
+}
+
 func LogInfo(ctx context.Context, msg string) {
 	logHelper(ctx, loggerINFO, msg)
 }

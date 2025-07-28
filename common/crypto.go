@@ -20,7 +20,7 @@ func GenerateJWTToken(payload map[string]interface{}) (string, error) {
 	}
 
 	if _, ok := claims["exp"]; !ok {
-		claims["exp"] = time.Now().Add(24 * time.Hour).Unix()
+		claims["exp"] = time.Now().Add(2 * time.Hour).Unix()
 	}
 
 	if _, ok := claims["iat"]; !ok {
@@ -74,4 +74,55 @@ func GenerateDeviceIDWithIP(ip string) string {
 	// 3) 拼接並回傳
 	id := append(randBytes, ipPart...)
 	return hex.EncodeToString(id)
+}
+
+func ValidateUser(token string, loginIp string) bool {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, jwt.NewValidationError("unexpected signing method", jwt.ValidationErrorSignatureInvalid)
+		}
+		return []byte(CryptoSecret), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		SysDebug("Invalid token: " + err.Error())
+		return false
+	}
+
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok {
+		if ip, ok := claims["Login_IP"].(string); ok {
+			if ip != loginIp {
+				return false // IP 不匹配
+			}
+			return true // IP 匹配
+		}
+	} else {
+		SysDebug("claim conversion error")
+		return false // 轉換 claims 失敗
+	}
+
+	return true
+}
+
+func GetJWTPayload(token string) (map[string]interface{}, error) {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, jwt.NewValidationError("unexpected signing method", jwt.ValidationErrorSignatureInvalid)
+		}
+		return []byte(CryptoSecret), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return nil, err // 解析失敗或無效
+	}
+
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok {
+		payload := make(map[string]interface{})
+		for k, v := range claims {
+			payload[k] = v
+		}
+		return payload, nil
+	}
+
+	return nil, jwt.NewValidationError("invalid token claims", jwt.ValidationErrorClaimsInvalid)
 }
