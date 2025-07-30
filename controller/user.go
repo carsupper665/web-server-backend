@@ -111,9 +111,16 @@ func Login(c *gin.Context) {
 }
 
 func CreateVerificationCode(c *gin.Context, user model.User) {
-	// 這個函式可以用來發送驗證碼到使用者的 email
-	// 目前只是回傳一個訊息，實際上應該要發送 email
 	common.LogDebug(c.Request.Context(), "CreateVerificationCode called for user: "+user.Username)
+	c.SetCookie(
+		"email",
+		user.Email, // 使用者的 email
+		60*5,
+		"/",   // path
+		"",    // domain (留空為當前 host)
+		false, // secure (https 才送)
+		true,  // httpOnly
+	)
 	code := fmt.Sprintf("%06d", rand.Intn(1000000))
 	err := model.SetVerificationCode(user.ID, code)
 	if err != nil {
@@ -193,16 +200,6 @@ func CreateVerificationCode(c *gin.Context, user model.User) {
 		common.LogError(c.Request.Context(), "SendEmail error: "+err.Error()+" SMTP account: "+common.SMTPAccount)
 		common.LogError(c.Request.Context(), "Failed to send verification code to user: "+user.Username)
 	}
-
-	c.SetCookie(
-		"email",
-		user.Email, // 使用者的 email
-		60*5,
-		"/",   // path
-		"",    // domain (留空為當前 host)
-		false, // secure (https 才送)
-		true,  // httpOnly
-	)
 }
 
 func VerifyLogin(c *gin.Context) {

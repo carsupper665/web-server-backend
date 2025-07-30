@@ -21,40 +21,22 @@ func CreateServer(c *gin.Context) {
 		return
 	}
 
-	token, err := c.Cookie(common.JwtCookieName)
-	if err != nil {
-		c.JSON(403, gin.H{"error": "Unauthorized"})
-		return
-	}
+	_, uid_str, uid_uint, err := getPayloadAndId(c)
 
-	payload, err := common.GetJWTPayload(token)
-	if err != nil {
-		common.LogDebug(c.Request.Context(), "JWT payload error: "+err.Error())
-		c.JSON(403, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	rawUID, _ := payload["user_id"]
-
-	serverID, err := service.CreateServer(rawUID.(string), req.ServerType, req.ServerVer, req.FabricLoader, req.FabricInstaller)
+	serverID, err := service.CreateServer(uid_str, req.ServerType, req.ServerVer, req.FabricLoader, req.FabricInstaller)
 	if err != nil {
 		common.LogError(c.Request.Context(), "CreateMinecraftServer error: "+err.Error())
 		c.JSON(500, gin.H{"error": "Failed to create server"})
 		return
 	}
-	uid, parseErr := strconv.ParseUint(rawUID.(string), 10, 32)
-	if parseErr != nil {
+
+	modelErr := model.AddServerToUser(uid_uint, serverID, req.DisplayName, common.MinecraftServerPath+"/"+serverID)
+	if modelErr != nil {
+		common.LogError(c.Request.Context(), "AddServerToUser error: "+err.Error())
 		service.ErrorFileClear(common.MinecraftServerPath + "/" + serverID)
-		common.LogError(c.Request.Context(), "Parsing user id error: "+parseErr.Error())
-		c.JSON(500, gin.H{"error": "Internal Server Error"})
-		common.SendErrorToDc(fmt.Sprintf(
-			"CreateServer failed: cannot parse user_id %q: %v",
-			rawUID, parseErr,
-		))
+		c.JSON(500, gin.H{"error": "Failed to add server to user"})
 		return
 	}
-
-	model.AddServerToUser(uint(uid), serverID, common.MinecraftServerPath+"/"+serverID)
 
 	c.JSON(200, gin.H{"server_id": serverID})
 }
@@ -76,4 +58,82 @@ func GetAllFabricVersions(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"versions": versions})
+}
+
+func MyServers(c *gin.Context) {
+	_, _, uid, err := getPayloadAndId(c)
+
+	servers, err := model.GetUserServers(uid)
+	if err != nil {
+		common.LogError(c.Request.Context(), "GetUserServers error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to retrieve servers"})
+		return
+	}
+
+	c.JSON(200, servers)
+}
+
+func DeleteServerById(c *gin.Context) {
+	serverID := c.Param("server_id")
+	if serverID == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, id_uint, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal Server Error: " + err.Error()})
+		return
+	}
+
+	err = model.RemoveServerByServerID(id_uint, serverID)
+	if err != nil {
+		common.LogError(c.Request.Context(), "RemoveServerByServerID error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to delete server"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Server deleted successfully"})
+}
+
+func getPayloadAndId(c *gin.Context) (map[string]interface{}, string, uint, error) {
+	token, err := c.Cookie(common.JwtCookieName)
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("failed to get JWT cookie: %w", err)
+	}
+	payload, err := common.GetJWTPayload(token)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "JWT error: "+err.Error())
+		clearCookies(c)
+		return nil, "", 0, fmt.Errorf("invalid token: %w", err)
+	}
+
+	rawUID, _ := payload["user_id"]
+	uid, parseErr := strconv.ParseUint(rawUID.(string), 10, 32)
+
+	if parseErr != nil {
+		common.LogError(c.Request.Context(), "Parsing user id error: "+parseErr.Error())
+		return nil, "", 0, fmt.Errorf("failed to parse user ID: %w", parseErr)
+	}
+	return payload, rawUID.(string), uint(uid), nil
+}
+
+func StartServer(c *gin.Context) {
+	serverID := c.Param("server_id")
+	if serverID == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Server started successfully"})
+}
+
+func StopServer(c *gin.Context) {
+	serverID := c.Param("server_id")
+	if serverID == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Server started successfully"})
 }

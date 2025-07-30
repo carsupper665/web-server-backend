@@ -15,6 +15,7 @@ import (
 func SetRouter(router *gin.Engine) {
 	SetAPIRouter(router)
 	SetAuthRouter(router)
+	SetUserRouter(router)
 
 	frontendBaseUrl := os.Getenv("FRONTEND_BASE_URL")
 

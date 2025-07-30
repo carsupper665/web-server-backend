@@ -58,13 +58,11 @@ func DownloadFile(dest, url string) error {
 }
 
 func SendErrorToDc(msg string) error {
-	// 1. Webhook URL（請替換成你的 URL）
 	url := DCWebHookUrl
 	if url == "" {
 		return fmt.Errorf("Discord webhook URL is not set")
 	}
 
-	// 2. 準備要傳送的 JSON 負載
 	payload := map[string]string{
 		"content":  msg,
 		"username": "ServerControllerNotify",
@@ -74,14 +72,12 @@ func SendErrorToDc(msg string) error {
 		return err
 	}
 
-	// 3. 建立 POST 請求，並設定 Content-Type 標頭
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json") // 必須設定為 application/json :contentReference[oaicite:0]{index=0}
+	req.Header.Set("Content-Type", "application/json")
 
-	// 4. 使用 http.Client 發送請求
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -89,9 +85,7 @@ func SendErrorToDc(msg string) error {
 	}
 	defer resp.Body.Close()
 
-	// 5. 檢查狀態碼，Discord 可能回 204 No Content 或 200 OK :contentReference[oaicite:1]{index=1}
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		// 若需要，可讀取回應內文以做除錯
 		respBody, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("webhook send failed: status %d, body: %s", resp.StatusCode, string(respBody))
 	}

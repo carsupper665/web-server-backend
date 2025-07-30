@@ -15,6 +15,7 @@ type CreateServerRequest struct {
 	ServerVer       string `json:"server_ver"`
 	FabricLoader    string `json:"fabric_loader"`
 	FabricInstaller string `json:"fabric_installer"`
+	DisplayName     string `json:"display_name"`
 }
 
 type GameVersion struct {
@@ -87,7 +88,7 @@ func CreateServer(ownerID string, serverType string, serverVer string, fabricLoa
 	}
 
 	if fURL != "" {
-		fabricInstallerPath := filepath.Join(sysPath, "fabric-Server.jar")
+		fabricInstallerPath := filepath.Join(sysPath, "fabric-erver.jar")
 		if err = common.DownloadFile(fabricInstallerPath, fURL); err != nil {
 			return "", fmt.Errorf("failed to download fabric installer: %w", err)
 		}
@@ -127,4 +128,8 @@ func GetAllFabricVersions() ([]string, error) {
 func GetAllVanillaVersions() (map[string]string, error) {
 	all := common.VanillaServerUrl
 	return all, nil
+}
+
+func StartServer(serverID string) error {
+	return nil
 }

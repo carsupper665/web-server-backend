@@ -56,7 +56,7 @@ func DebugMode() gin.HandlerFunc {
 			common.LogWarn(c.Request.Context(), "Warn: Debug mode is enabled, allowing all test requests.")
 			c.Next()
 		} else {
-			c.AbortWithStatus(http.StatusForbidden)
+			c.AbortWithStatus(http.StatusBadGateway)
 			return
 		}
 	}
