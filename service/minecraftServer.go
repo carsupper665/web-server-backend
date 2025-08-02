@@ -23,11 +23,35 @@ type GameVersion struct {
 	Stable  bool   `json:"stable"`
 }
 
+type ServerService struct {
+	mgr *ServerManager
+}
+
 func ErrorFileClear(path string) error {
 	if err := os.RemoveAll(path); err != nil {
 		return fmt.Errorf("cleanup failed for %s: %w", path, err)
 	}
 	return nil
+}
+
+func NewServerService(mgr *ServerManager) *ServerService {
+	return &ServerService{mgr: mgr}
+}
+
+func (s *ServerService) Start(sid, oid, workDir, maxMem, minMem string, args []string) (*Server, error) {
+	return s.mgr.StartServer(sid, oid, workDir, maxMem, minMem, args)
+}
+
+func (s *ServerService) Stop(sid string) error {
+	return s.mgr.StopServer(sid)
+}
+
+func (s *ServerService) Status(sid string) (string, error) {
+	return s.mgr.GetServerStatus(sid)
+}
+
+func (s *ServerService) OwnerCount(oid string) int {
+	return s.mgr.countByOwner(oid)
 }
 
 func CreateServer(ownerID string, serverType string, serverVer string, fabricLoader string, fabricInstaller string) (string, error) {
@@ -88,7 +112,7 @@ func CreateServer(ownerID string, serverType string, serverVer string, fabricLoa
 	}
 
 	if fURL != "" {
-		fabricInstallerPath := filepath.Join(sysPath, "fabric-erver.jar")
+		fabricInstallerPath := filepath.Join(sysPath, "server.jar")
 		if err = common.DownloadFile(fabricInstallerPath, fURL); err != nil {
 			return "", fmt.Errorf("failed to download fabric installer: %w", err)
 		}

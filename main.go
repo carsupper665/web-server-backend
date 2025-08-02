@@ -45,7 +45,6 @@ func main() {
 	// init DB (use SQLite)
 	err = model.InitDB()
 	if err != nil {
-		// fatal log 會自己關程序
 		common.FatalLog("failed to init DB: " + err.Error())
 	}
 	// check root user exists

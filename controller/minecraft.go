@@ -117,23 +117,3 @@ func getPayloadAndId(c *gin.Context) (map[string]interface{}, string, uint, erro
 	}
 	return payload, rawUID.(string), uint(uid), nil
 }
-
-func StartServer(c *gin.Context) {
-	serverID := c.Param("server_id")
-	if serverID == "" {
-		c.JSON(400, gin.H{"error": "Server ID is required"})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "Server started successfully"})
-}
-
-func StopServer(c *gin.Context) {
-	serverID := c.Param("server_id")
-	if serverID == "" {
-		c.JSON(400, gin.H{"error": "Server ID is required"})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "Server started successfully"})
-}
