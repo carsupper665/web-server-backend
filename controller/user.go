@@ -219,8 +219,8 @@ func VerifyLogin(c *gin.Context) {
 		return
 	}
 
-	email, err2 := c.Cookie("email")
-	if err2 != nil {
+	email, cookieErr := c.Cookie("email")
+	if cookieErr != nil {
 		common.LogError(c.Request.Context(), "Failed to get email from cookie: "+err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request."})
 		return

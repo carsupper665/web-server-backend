@@ -91,3 +91,11 @@ func SendErrorToDc(msg string) error {
 	}
 	return nil
 }
+
+func GetPortList(start int, end int) []int {
+	ports := make([]int, 0, end-start+1)
+	for i := start; i <= end; i++ {
+		ports = append(ports, i)
+	}
+	return ports
+}

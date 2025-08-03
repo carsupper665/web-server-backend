@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-backend/common"
 	"io"
 	"os/exec"
 	"sync"
@@ -17,6 +18,8 @@ const (
 	// MaxServersPerOwner 限制每個 owner 同時開啟的最大伺服器數量
 	MaxServersPerOwner = 3
 )
+
+var ErrAlreadyRunning = errors.New("server already running")
 
 type Server struct {
 	sid          string
@@ -33,7 +36,7 @@ type Server struct {
 	exp          time.Time
 	sdc          func(string)
 	args         []string
-	mu           sync.Mutex
+	mu           sync.RWMutex
 }
 
 func NewServer(sid, oid, workDir, maxMem, minMem string, portStr string, callback func(string), args []string) *Server {
@@ -55,7 +58,7 @@ func (s *Server) Start() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.serverStatus == "running" {
-		return errors.New("server already running")
+		return ErrAlreadyRunning
 	}
 	// 建立命令參數
 	cmdArgs := []string{
@@ -86,7 +89,7 @@ func (s *Server) Start() error {
 		return err
 	}
 	s.serverStatus = "running"
-
+	s.exp = time.Now().Add(3 * time.Minute)
 	go s.captureLogs()
 	go s.waitAndCleanup()
 	return nil
@@ -100,11 +103,8 @@ func (s *Server) waitAndCleanup() {
 	s.cmd.Wait()
 	s.mu.Lock()
 	s.serverStatus = "stopped"
-	s.exp = time.Now().Add(5 * time.Minute)
+	s.exp = time.Now().Add(3 * time.Minute)
 	s.mu.Unlock()
-	if s.sdc != nil {
-		s.sdc(s.sid)
-	}
 }
 
 func (s *Server) Stop() error {
@@ -113,11 +113,30 @@ func (s *Server) Stop() error {
 	if s.cmd == nil || s.serverStatus != "running" {
 		return errors.New("server not running")
 	}
-	if err := s.cmd.Process.Kill(); err != nil {
-		return err
+
+	_, _ = io.WriteString(s.stdin, "stop\n")
+
+	timeout := 30 * time.Second
+	done := make(chan error, 1)
+	go func() {
+		done <- s.cmd.Wait()
+	}()
+
+	select {
+	case <-time.After(timeout):
+		// 超時，強制 kill
+		if s.cmd.Process != nil {
+			_ = s.cmd.Process.Kill()
+		}
+		<-done // 等候 goroutine 結束（可以忽略 error）
+	case err := <-done:
+		if err != nil {
+			common.SysError(err.Error())
+		}
 	}
+
 	s.serverStatus = "stopped"
-	s.exp = time.Now().Add(5 * time.Minute)
+	s.exp = time.Now().Add(3 * time.Minute)
 	return nil
 }
 
@@ -132,6 +151,18 @@ func (s *Server) Status() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.serverStatus
+}
+
+func (s *Server) Port() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.port
+}
+
+func (s *Server) ID() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sid
 }
 
 func (s *Server) ReadLatestLog() string {
@@ -174,19 +205,14 @@ type ServerManager struct {
 	mu             sync.RWMutex
 }
 
-func NewServerManager() *ServerManager {
+func NewServerManager(ports []int) *ServerManager {
 	sm := &ServerManager{
-		servers: make(map[string]*Server),
+		servers:        make(map[string]*Server),
+		availablePorts: ports,
+		usingPorts:     make(map[int]string),
 	}
 	go sm.cleanupExpired()
 	return sm
-}
-
-func (sm *ServerManager) IsExist(sid string) bool {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	_, ok := sm.servers[sid]
-	return ok
 }
 
 func (sm *ServerManager) countByOwner(oid string) int {
@@ -230,14 +256,31 @@ func (sm *ServerManager) releasePort(portStr string) {
 	sm.availablePorts = append(sm.availablePorts, port)
 }
 
+func (sm *ServerManager) releasePortWithOutLock(portStr string) {
+	var port int
+	fmt.Sscanf(portStr, "%d", &port)
+	delete(sm.usingPorts, port)
+	sm.availablePorts = append(sm.availablePorts, port)
+}
+
 func (sm *ServerManager) StartServer(sid, oid, workDir, maxMem, minMem string, args []string) (*Server, error) {
 	if sm.countByOwner(oid) >= MaxServersPerOwner {
 		return nil, fmt.Errorf("owner %s has reached max server limit of %d", oid, MaxServersPerOwner)
 	}
 
 	sm.mu.Lock()
-	if _, exists := sm.servers[sid]; exists {
-		return nil, fmt.Errorf("server with ID %s already exists", sid)
+	if s, exists := sm.servers[sid]; exists {
+		err := s.Start()
+		if err != nil && errors.Is(err, ErrAlreadyRunning) {
+			sm.mu.Unlock()
+			common.SysDebug("server already running sid: " + sid)
+			return s, nil
+		} else if err != nil {
+			panic("Unknow error:" + err.Error())
+		}
+		sm.mu.Unlock()
+		common.SysDebug("Server is running: " + sid)
+		return s, nil // Server Running successfully
 	}
 	sm.mu.Unlock()
 
@@ -263,6 +306,7 @@ func (sm *ServerManager) StartServer(sid, oid, workDir, maxMem, minMem string, a
 		sm.mu.Unlock()
 		return nil, err
 	}
+	common.SysDebug("Server Start: " + sid)
 	return srv, nil
 }
 
@@ -273,9 +317,11 @@ func (sm *ServerManager) StopServer(sid string) error {
 	if !exists {
 		return fmt.Errorf("no server with ID %s", sid)
 	}
+
 	if err := srv.Stop(); err != nil {
 		return err
 	}
+
 	// 不能重複釋放PORT 必須等到過期回收 在釋放
 	// var p int
 	// fmt.Sscanf(srv.port, "%d", &p)
@@ -308,7 +354,7 @@ func (sm *ServerManager) shutDownServerCallback(sid string) {
 	defer sm.mu.Unlock()
 	// shut down server時必須釋放port
 	srv := sm.servers[sid]
-	sm.releasePort(srv.port)
+	sm.releasePortWithOutLock(srv.port)
 	delete(sm.servers, sid)
 }
 
@@ -319,9 +365,12 @@ func (sm *ServerManager) cleanupExpired() {
 		now := time.Now()
 		sm.mu.Lock()
 		for sid, srv := range sm.servers {
-			if srv.Status() == "stopped" && srv.exp.Before(now) {
-				sm.releasePort(srv.port)
+			s := srv.Status()
+			isExp := srv.exp.Before(now)
+			if s == "stopped" && isExp {
+				sm.releasePortWithOutLock(srv.port)
 				delete(sm.servers, sid)
+				common.SysDebug(fmt.Sprintf("Server: %s del, port: %s", sid, srv.port))
 			}
 		}
 		sm.mu.Unlock()

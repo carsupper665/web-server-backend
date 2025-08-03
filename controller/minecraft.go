@@ -117,3 +117,91 @@ func getPayloadAndId(c *gin.Context) (map[string]interface{}, string, uint, erro
 	}
 	return payload, rawUID.(string), uint(uid), nil
 }
+
+// --------------------Server Controller--------------------
+
+type ServerController struct {
+	svc *service.ServerService
+}
+
+func NewServerController(svc *service.ServerService) *ServerController {
+	return &ServerController{svc: svc}
+}
+
+func (sc *ServerController) GetStatus(c *gin.Context) {
+	// Get the server status
+	serverID := c.Param("server_id")
+	if serverID == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+	status, err := sc.svc.Status(serverID)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetStatus error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to get server status, or server not found."})
+		return
+	}
+	c.JSON(200, gin.H{"status": status})
+
+}
+
+func (sc *ServerController) Start(c *gin.Context) {
+
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, oid, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetServerByID error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Server start Failed."})
+		return
+	}
+
+	srv, err := sc.svc.Start(sid, oid, serverInfo.SystemPath, "2G", "1G", []string{})
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, StartServer error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to start server"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Server started successfully", "server_id": srv.ID})
+}
+
+func (sc *ServerController) Stop(c *gin.Context) {
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetServerByID error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Server Stop Failed."})
+		return
+	}
+
+	err = sc.svc.Stop(serverInfo.ServerID)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, StopServer error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed Stop Server"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Server is stopped"})
+
+}
