@@ -203,5 +203,74 @@ func (sc *ServerController) Stop(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "Server is stopped"})
+}
+
+func (sc *ServerController) GetServerProperties(c *gin.Context) {
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetServerByID error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Server Stop Failed."})
+		return
+	}
+
+	texts, err := service.GetPropertyText(serverInfo.SystemPath)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Get Property fail. err: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to get server properties."})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Property Get.", "property": texts})
+}
+
+type UploadPropertyRequest struct {
+	Texts string `json:"texts" binding:"required"`
+}
+
+func (sc *ServerController) UploadProperty(c *gin.Context) {
+	var req UploadPropertyRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.LogDebug(c.Request.Context(), "request binding error: "+err.Error())
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Upload Error: " + err.Error()})
+		return
+	}
+
+	err = service.ReplaceProperty(serverInfo.SystemPath, req.Texts)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Upload Error: " + err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Uploaded."})
 
 }

@@ -11,6 +11,24 @@ import (
 	"time"
 )
 
+func read(dir string) (*os.File, error) {
+	path := dir + "/server.properties"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		header := fmt.Sprintf("#Minecraft server properties\n#Generated on %s\n", time.Now().Format(time.RFC1123))
+		if err := os.WriteFile(path, []byte(header), 0644); err != nil {
+			return nil, err
+		}
+	}
+
+	f, err := os.Open(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 func backUp(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
@@ -30,16 +48,9 @@ func backUp(src, dst string) error {
 
 func UpdateProperty(workDir, key, value string) error {
 	path := workDir + "/server.properties"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		header := fmt.Sprintf("#Minecraft server properties\n#Generated on %s\n", time.Now().Format(time.RFC1123))
-		if err := os.WriteFile(path, []byte(header), 0644); err != nil {
-			return err
-		}
-	}
-
 	_ = backUp(path, path+".bak")
 
-	f, err := os.Open(path)
+	f, err := read(path)
 
 	if err != nil {
 		return err
@@ -95,4 +106,49 @@ func UpdateProperty(workDir, key, value string) error {
 	}
 	return nil
 
+}
+
+func GetPropertyText(workDir string) (string, error) {
+	f, err := read(workDir)
+
+	if err != nil {
+		return "", nil
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	var lines []string
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return strings.Join(lines, "\n"), nil
+}
+
+func ReplaceProperty(workDir string, texts string) error {
+
+	path := workDir + "/server.properties"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		header := fmt.Sprintf("#Minecraft server properties\n#Generated on %s\n", time.Now().Format(time.RFC1123))
+		if err := os.WriteFile(path, []byte(header), 0644); err != nil {
+			return err
+		}
+	}
+
+	_ = backUp(path, path+".bak")
+	tmpPath := path + ".tmp"
+	if !strings.HasSuffix(texts, "\n") {
+		texts += "\n" // 保留 trailing newline
+	}
+	if err := os.WriteFile(tmpPath, []byte(texts), 0644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+
+	return nil
 }

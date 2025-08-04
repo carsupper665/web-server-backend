@@ -153,7 +153,3 @@ func GetAllVanillaVersions() (map[string]string, error) {
 	all := common.VanillaServerUrl
 	return all, nil
 }
-
-func StartServer(serverID string) error {
-	return nil
-}

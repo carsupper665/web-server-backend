@@ -46,6 +46,8 @@ func SetAPIRouter(router *gin.Engine) {
 		testApi.POST("/status/:server_id", c.GetStatus)
 		testApi.POST("/startmyserver/:server_id", c.Start)
 		testApi.POST("/stopmyserver/:server_id", c.Stop)
+		testApi.POST("/:server_id/property", c.GetServerProperties)
+		testApi.POST("/:server_id/Upproperty", c.UploadProperty)
 	}
 
 }
