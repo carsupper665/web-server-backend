@@ -20,6 +20,7 @@ const (
 )
 
 var ErrAlreadyRunning = errors.New("server already running")
+var ErrNotFound = errors.New("Server Not Found.")
 
 type Server struct {
 	sid          string
@@ -196,6 +197,21 @@ func (s *Server) SetProperty(key, value string) error {
 	return UpdateProperty(s.workDir, key, value)
 }
 
+func (s *Server) ShutDown() error {
+	s.mu.RLock()
+	status := s.serverStatus
+	callback := s.sdc
+	sid := s.sid
+	s.mu.RUnlock()
+	if status == "running" {
+		if err := s.Stop(); err != nil {
+			return err
+		}
+	}
+	callback(sid)
+	return nil
+}
+
 // ---------------- ServerManager ----------------
 
 type ServerManager struct {
@@ -310,12 +326,28 @@ func (sm *ServerManager) StartServer(sid, oid, workDir, maxMem, minMem string, a
 	return srv, nil
 }
 
+func (sm *ServerManager) SendCommand(sid string, cmd string) error {
+	sm.mu.RLock()
+	srv, exists := sm.servers[sid]
+	sm.mu.RUnlock()
+
+	if !exists {
+		return ErrNotFound
+	}
+
+	if err := srv.SendCommand(cmd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (sm *ServerManager) StopServer(sid string) error {
 	sm.mu.RLock()
 	srv, exists := sm.servers[sid]
 	sm.mu.RUnlock()
 	if !exists {
-		return fmt.Errorf("no server with ID %s", sid)
+		return ErrNotFound
 	}
 
 	if err := srv.Stop(); err != nil {
@@ -334,7 +366,7 @@ func (sm *ServerManager) RestartServer(sid string) error {
 	srv, exists := sm.servers[sid]
 	sm.mu.RUnlock()
 	if !exists {
-		return fmt.Errorf("no server with ID %s", sid)
+		return ErrNotFound
 	}
 	return srv.Restart()
 }
@@ -344,7 +376,7 @@ func (sm *ServerManager) GetServerStatus(sid string) (string, error) {
 	srv, exists := sm.servers[sid]
 	sm.mu.RUnlock()
 	if !exists {
-		return "", fmt.Errorf("no server with ID %s", sid)
+		return "", ErrNotFound
 	}
 	return srv.Status(), nil
 }
