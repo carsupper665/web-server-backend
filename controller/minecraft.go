@@ -3,6 +3,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"go-backend/common"
 	"go-backend/model"
@@ -16,7 +17,7 @@ func CreateServer(c *gin.Context) {
 	var req service.CreateServerRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.LogError(c.Request.Context(), "CreateMinecraftServer request binding error: "+err.Error())
+		common.LogDebug(c.Request.Context(), "CreateMinecraftServer request binding error: "+err.Error())
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
@@ -32,7 +33,7 @@ func CreateServer(c *gin.Context) {
 
 	modelErr := model.AddServerToUser(uid_uint, serverID, req.DisplayName, common.MinecraftServerPath+"/"+serverID)
 	if modelErr != nil {
-		common.LogError(c.Request.Context(), "AddServerToUser error: "+err.Error())
+		common.LogError(c.Request.Context(), "AddServerToUser error: "+modelErr.Error())
 		service.ErrorFileClear(common.MinecraftServerPath + "/" + serverID)
 		c.JSON(500, gin.H{"error": "Failed to add server to user"})
 		return
@@ -65,7 +66,7 @@ func MyServers(c *gin.Context) {
 
 	servers, err := model.GetUserServers(uid)
 	if err != nil {
-		common.LogError(c.Request.Context(), "GetUserServers error: "+err.Error())
+		common.LogDebug(c.Request.Context(), "GetUserServers error: "+err.Error())
 		c.JSON(500, gin.H{"error": "Failed to retrieve servers"})
 		return
 	}
@@ -88,7 +89,7 @@ func DeleteServerById(c *gin.Context) {
 
 	err = model.RemoveServerByServerID(id_uint, serverID)
 	if err != nil {
-		common.LogError(c.Request.Context(), "RemoveServerByServerID error: "+err.Error())
+		common.LogDebug(c.Request.Context(), "RemoveServerByServerID error: "+err.Error())
 		c.JSON(500, gin.H{"error": "Failed to delete server"})
 		return
 	}
@@ -112,7 +113,7 @@ func getPayloadAndId(c *gin.Context) (map[string]interface{}, string, uint, erro
 	uid, parseErr := strconv.ParseUint(rawUID.(string), 10, 32)
 
 	if parseErr != nil {
-		common.LogError(c.Request.Context(), "Parsing user id error: "+parseErr.Error())
+		common.LogDebug(c.Request.Context(), "Parsing user id error: "+parseErr.Error())
 		return nil, "", 0, fmt.Errorf("failed to parse user ID: %w", parseErr)
 	}
 	return payload, rawUID.(string), uint(uid), nil
@@ -169,6 +170,9 @@ func (sc *ServerController) Start(c *gin.Context) {
 	srv, err := sc.svc.Start(sid, oid, serverInfo.SystemPath, "2G", "1G", []string{})
 	if err != nil {
 		common.LogDebug(c.Request.Context(), "Log, StartServer error: "+err.Error())
+		if !errors.Is(err, service.ErrAlreadyRunning) && !errors.Is(err, service.ErrNotFound) && !errors.Is(err, service.ErrMaxReached) {
+			common.LogError(c.Request.Context(), "Log, StartServer error: "+err.Error())
+		}
 		c.JSON(500, gin.H{"error": "Failed to start server"})
 		return
 	}
@@ -198,6 +202,9 @@ func (sc *ServerController) Stop(c *gin.Context) {
 	err = sc.svc.Stop(serverInfo.ServerID)
 	if err != nil {
 		common.LogDebug(c.Request.Context(), "Log, StopServer error: "+err.Error())
+		if !errors.Is(err, service.ErrAlreadyRunning) && !errors.Is(err, service.ErrNotFound) && !errors.Is(err, service.ErrMaxReached) {
+			common.LogError(c.Request.Context(), "Log, StopServer error: "+err.Error())
+		}
 		c.JSON(500, gin.H{"error": "Failed Stop Server"})
 		return
 	}

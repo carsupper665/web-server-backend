@@ -34,7 +34,12 @@ func SetAPIRouter(router *gin.Engine) {
 	amcapi := mcapi.Group("/a")
 	amcapi.Use(middleware.ValidateJWT())
 	{
+		amcapi.POST("/create", controller.CreateServer)
 		amcapi.POST("/status/:server_id", c.GetStatus)
+		amcapi.POST("/stop/:server_id", c.Stop)
+		amcapi.POST("/start/:server_id", c.Start)
+		amcapi.POST("/property/:server_id", c.GetServerProperties)
+		amcapi.POST("/UploadProperty/:server_id", c.UploadProperty)
 	}
 
 	testApi := router.Group("/test-api")

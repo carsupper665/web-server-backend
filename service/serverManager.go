@@ -21,6 +21,7 @@ const (
 
 var ErrAlreadyRunning = errors.New("server already running")
 var ErrNotFound = errors.New("Server Not Found.")
+var ErrMaxReached = errors.New("User has reached the maximum number of servers")
 
 type Server struct {
 	sid          string
@@ -281,7 +282,7 @@ func (sm *ServerManager) releasePortWithOutLock(portStr string) {
 
 func (sm *ServerManager) StartServer(sid, oid, workDir, maxMem, minMem string, args []string) (*Server, error) {
 	if sm.countByOwner(oid) >= MaxServersPerOwner {
-		return nil, fmt.Errorf("owner %s has reached max server limit of %d", oid, MaxServersPerOwner)
+		return nil, ErrMaxReached
 	}
 
 	sm.mu.Lock()
