@@ -27,17 +27,18 @@ func createRootAccountForTest() error {
 	//if user.Status != common.UserStatusEnabled {
 	if err := DB.First(&user).Error; err != nil {
 		userEmail := common.GetEnvOrDefaultString("ROOT_USER_EMAIL", "")
-		common.SysLog("no user exists, create a root user for you: username is root, password is 123456, email is:" + userEmail)
 
 		if userEmail == "" {
 			return errors.New("ROOT_USER_EMAIL is not set, please set it in .env file")
 		}
-		hashedPassword, err := common.Password2Hash("123456")
+		password := common.GetEnvOrDefaultString("ROOT_USER_PASSWORD", "123456")
+		username := common.GetEnvOrDefaultString("ROOT_USER_NAME", "root")
+		hashedPassword, err := common.Password2Hash(password)
 		if err != nil {
 			return err
 		}
 		rootUser := User{
-			Username:    "root",
+			Username:    username,
 			Password:    hashedPassword,
 			Email:       userEmail,
 			Role:        common.RoleRootUser,
@@ -45,6 +46,7 @@ func createRootAccountForTest() error {
 			AccessToken: nil,
 		}
 		DB.Create(&rootUser)
+		common.SysLog("no user exists, create a root user for you: username is " + username + ", password is " + password + ", email is:" + userEmail)
 	}
 	return nil
 }
