@@ -403,7 +403,7 @@ func (sm *ServerManager) cleanupExpired() {
 			if s == "stopped" && isExp {
 				sm.releasePortWithOutLock(srv.port)
 				delete(sm.servers, sid)
-				common.SysDebug(fmt.Sprintf("Server: %s del, port: %s", sid, srv.port))
+				common.SysLog(fmt.Sprintf("Server: %s del, port: %s", sid, srv.port))
 			}
 		}
 		sm.mu.Unlock()
