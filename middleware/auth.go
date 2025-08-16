@@ -70,6 +70,7 @@ func UserAgentFilter() gin.HandlerFunc {
 		"firefox",
 		"safari",
 		"opera",
+		"mozilla",
 	}
 
 	return func(c *gin.Context) {
@@ -102,7 +103,7 @@ func UserAgentFilter() gin.HandlerFunc {
 		}
 
 		// 其他一律拒絕
-		c.Abort()
+		c.AbortWithStatus(http.StatusForbidden)
 	}
 }
 

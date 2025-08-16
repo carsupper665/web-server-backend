@@ -98,8 +98,8 @@ func Login(c *gin.Context) {
 		return
 	}
 	// 檢查是否已存在此裝置的登入紀錄
-	isExists, _ := model.IsDeviceExists(clientDeviceID)
-	if !isExists { //不存在就跑email 驗證
+	isExists, dberr := model.IsDeviceExists(clientDeviceID)
+	if !isExists || dberr != nil { //不存在就跑email 驗證
 		CreateVerificationCode(c, user) // 發送驗證碼
 		c.JSON(202, gin.H{"message": "verification code sent"})
 		return
