@@ -40,6 +40,19 @@ func SetAPIRouter(router *gin.Engine) {
 		amcapi.POST("/start/:server_id", c.Start)
 		amcapi.POST("/property/:server_id", c.GetServerProperties)
 		amcapi.POST("/UploadProperty/:server_id", c.UploadProperty)
+		amcapi.POST("/cmd/:server_id", c.SendCommand)
+	}
+
+	sapi := router.Group("/server-api")
+	sapi.Use(gzip.Gzip(gzip.DefaultCompression),
+		middleware.UserAgentFilter(),
+		middleware.GloabalIPFilter(),
+	)
+
+	asapi := sapi.Group("/a")
+	asapi.Use(middleware.ValidateJWT())
+	{
+		asapi.GET("/log/:server_id", c.GetServerLog)
 	}
 
 	testApi := router.Group("/test-api")

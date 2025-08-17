@@ -54,6 +54,14 @@ func (s *ServerService) OwnerCount(oid string) int {
 	return s.mgr.countByOwner(oid)
 }
 
+func (s *ServerService) ReadLatestLog(sid string) (string, error) {
+	return s.mgr.ReadLatestLog(sid)
+}
+
+func (s *ServerService) SendCommand(sid string, command string) error {
+	return s.mgr.SendCommand(sid, command)
+}
+
 func CreateServer(ownerID string, serverType string, serverVer string, fabricLoader string, fabricInstaller string) (string, error) {
 	var idPerFix, fURL, vURL string
 	var err error

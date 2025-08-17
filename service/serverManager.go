@@ -168,11 +168,11 @@ func (s *Server) ID() string {
 }
 
 func (s *Server) ReadLatestLog() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	data := s.logBuffer.String()
-	if len(data) > 1024 {
-		return data[len(data)-1024:]
+	if len(data) > (1024 * 8) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		return data[len(data)-(1024*8):]
 	}
 	return data
 }
@@ -377,7 +377,7 @@ func (sm *ServerManager) GetServerStatus(sid string) (string, error) {
 	srv, exists := sm.servers[sid]
 	sm.mu.RUnlock()
 	if !exists {
-		return "", ErrNotFound
+		return "stopped", nil
 	}
 	return srv.Status(), nil
 }
@@ -389,6 +389,18 @@ func (sm *ServerManager) shutDownServerCallback(sid string) {
 	srv := sm.servers[sid]
 	sm.releasePortWithOutLock(srv.port)
 	delete(sm.servers, sid)
+}
+
+func (sm *ServerManager) ReadLatestLog(sid string) (string, error) {
+	sm.mu.RLock()
+	srv, exists := sm.servers[sid]
+	sm.mu.RUnlock()
+
+	if !exists {
+		return "", ErrNotFound
+	}
+
+	return srv.ReadLatestLog(), nil
 }
 
 func (sm *ServerManager) cleanupExpired() {

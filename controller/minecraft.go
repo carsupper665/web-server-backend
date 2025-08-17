@@ -129,6 +129,35 @@ func NewServerController(svc *service.ServerService) *ServerController {
 	return &ServerController{svc: svc}
 }
 
+func (sc *ServerController) GetServerLog(c *gin.Context) {
+	serverID := c.Param("server_id")
+	if serverID == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, serverID)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetServerByID error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to retrieve server log"})
+		return
+	}
+
+	logs, err := sc.svc.ReadLatestLog(serverInfo.ServerID)
+	if err != nil {
+		common.LogDebug(c.Request.Context(), "Log, GetServerLog error: "+err.Error())
+		c.JSON(500, gin.H{"error": "Failed to retrieve server log"})
+		return
+	}
+	c.JSON(200, gin.H{"logs": logs})
+}
+
 func (sc *ServerController) GetStatus(c *gin.Context) {
 	// Get the server status
 	serverID := c.Param("server_id")
@@ -239,6 +268,45 @@ func (sc *ServerController) GetServerProperties(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"message": "Property Get.", "property": texts})
+}
+
+type SendCommandRequest struct {
+	Command string `json:"command" binding:"required"`
+}
+
+func (sc *ServerController) SendCommand(c *gin.Context) {
+	var req SendCommandRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.LogDebug(c.Request.Context(), "request binding error: "+err.Error())
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get server information."})
+		return
+	}
+
+	err = sc.svc.SendCommand(serverInfo.ServerID, req.Command)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to send command to server."})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Command sent successfully."})
 }
 
 type UploadPropertyRequest struct {
