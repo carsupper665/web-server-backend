@@ -11,6 +11,7 @@ import (
 )
 
 func SetUserRouter(router *gin.Engine) {
+	router.Use(middleware.CORS())
 	router.POST("/logout", controller.Logout)
 
 	user := router.Group("/user")

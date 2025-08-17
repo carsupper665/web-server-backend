@@ -14,6 +14,8 @@ import (
 )
 
 func SetAuthRouter(router *gin.Engine) {
+	router.Use(middleware.CORS())
+
 	auth := router.Group("/Authentication")
 	auth.Use(
 		gzip.Gzip(gzip.DefaultCompression),

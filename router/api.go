@@ -20,7 +20,7 @@ func SetAPIRouter(router *gin.Engine) {
 	mgr := service.NewServerManager(pl)
 	svc := service.NewServerService(mgr)
 	c := controller.NewServerController(svc)
-
+	router.Use(middleware.CORS())
 	mcapi := router.Group("/mc-api")
 	mcapi.Use(gzip.Gzip(gzip.DefaultCompression),
 		middleware.IpRateLimiter(common.GlobalApiRateLimitNum, common.GlobalApiRateLimitDuration),
