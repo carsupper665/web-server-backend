@@ -35,6 +35,7 @@ func SetAPIRouter(router *gin.Engine) {
 	amcapi.Use(middleware.ValidateJWT())
 	{
 		amcapi.POST("/create", controller.CreateServer)
+		amcapi.GET("/backup/:server_id", c.Backup)
 		amcapi.POST("/status/:server_id", c.GetStatus)
 		amcapi.POST("/stop/:server_id", c.Stop)
 		amcapi.POST("/start/:server_id", c.Start)
@@ -42,13 +43,11 @@ func SetAPIRouter(router *gin.Engine) {
 		amcapi.POST("/UploadProperty/:server_id", c.UploadProperty)
 		amcapi.POST("/cmd/:server_id", c.SendCommand)
 	}
-
 	sapi := router.Group("/server-api")
 	sapi.Use(gzip.Gzip(gzip.DefaultCompression),
 		middleware.UserAgentFilter(),
 		middleware.GloabalIPFilter(),
 	)
-
 	asapi := sapi.Group("/a")
 	asapi.Use(middleware.ValidateJWT())
 	{
@@ -66,6 +65,7 @@ func SetAPIRouter(router *gin.Engine) {
 		testApi.POST("/stopmyserver/:server_id", c.Stop)
 		testApi.POST("/:server_id/property", c.GetServerProperties)
 		testApi.POST("/:server_id/Upproperty", c.UploadProperty)
+		testApi.GET("/:server_id/bc", c.Backup)
 	}
 
 }

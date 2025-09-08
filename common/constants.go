@@ -11,9 +11,12 @@ package common
 // )
 
 const (
-	Version    = "0.1.0"
-	Build      = ColorBrightYellow + "bata-1.1.12c3" + ColorReset
-	SystemName = "Server Controller"
+	Version                 = "0.1.0"
+	Build                   = ColorBrightYellow + "bata-1.1.13c1" + ColorReset
+	SystemName              = "Server Controller"
+	ClientVersionHeader     = "X-Client-Version"
+	AvailableClientVersions = "0.1.0"
+	LatestClientVersion     = "0.1.0"
 )
 
 const (

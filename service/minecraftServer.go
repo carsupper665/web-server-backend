@@ -62,6 +62,10 @@ func (s *ServerService) SendCommand(sid string, command string) error {
 	return s.mgr.SendCommand(sid, command)
 }
 
+func (s *ServerService) Backup(sid, workDir string) error {
+	return s.mgr.BackUp(sid, workDir)
+}
+
 func CreateServer(ownerID string, serverType string, serverVer string, fabricLoader string, fabricInstaller string) (string, error) {
 	var idPerFix, fURL, vURL string
 	var err error

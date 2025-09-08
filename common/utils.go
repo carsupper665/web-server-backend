@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -98,4 +99,59 @@ func GetPortList(start int, end int) []int {
 		ports = append(ports, i)
 	}
 	return ports
+}
+
+func Copy(src, dst string) error {
+	err := os.MkdirAll(dst, os.ModePerm) //0777 = os.ModePerm
+	if err != nil {
+		return err
+	}
+
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		targetPath := filepath.Join(dst, relPath)
+
+		if info.IsDir() {
+			return os.MkdirAll(targetPath, info.Mode())
+		} else {
+			return copyFile(path, targetPath)
+		}
+	})
+
+}
+
+func copyFile(src, dst string) error {
+	file, err := os.Open(src)
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	dstFile, err := os.Create(dst)
+
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, file)
+
+	if err != nil {
+		return err
+	}
+	// 複製檔案權限
+	info, err := os.Stat(src)
+	if err == nil {
+		err = os.Chmod(dst, info.Mode())
+	}
+	return err
 }

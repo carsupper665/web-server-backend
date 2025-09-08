@@ -22,6 +22,7 @@ const (
 var ErrAlreadyRunning = errors.New("server already running")
 var ErrNotFound = errors.New("Server Not Found.")
 var ErrMaxReached = errors.New("User has reached the maximum number of servers")
+var ErrServerRunning = errors.New("Cannot Backup while server is running")
 
 type Server struct {
 	sid          string
@@ -401,6 +402,22 @@ func (sm *ServerManager) ReadLatestLog(sid string) (string, error) {
 	}
 
 	return srv.ReadLatestLog(), nil
+}
+
+func (sm *ServerManager) BackUp(sid, workDir string) error {
+	sm.mu.RLock()
+	srv, exists := sm.servers[sid]
+	sm.mu.RUnlock()
+
+	if exists && srv.Status() == "running" {
+		return ErrServerRunning
+	}
+
+	src := workDir + "/world"
+	dst := workDir + "/backup/" + time.Now().Format("20060102_150405")
+
+	return common.Copy(src, dst)
+
 }
 
 func (sm *ServerManager) cleanupExpired() {

@@ -309,6 +309,40 @@ func (sc *ServerController) SendCommand(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Command sent successfully."})
 }
 
+func (sc *ServerController) Backup(c *gin.Context) {
+	sid := c.Param("server_id")
+	if sid == "" {
+		c.JSON(400, gin.H{"error": "Server ID is required"})
+		return
+	}
+
+	_, _, uintID, err := getPayloadAndId(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	serverInfo, err := model.GetServerByID(uintID, sid)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get server information."})
+		return
+	}
+
+	err = sc.svc.Backup(serverInfo.ServerID, serverInfo.SystemPath)
+
+	if err != nil {
+		if !errors.Is(err, service.ErrServerRunning) {
+			common.LogError(c.Request.Context(), "Backup error: "+err.Error())
+		}
+		r_id := c.Request.Context().Value(common.RequestIdKey)
+		c.JSON(500, gin.H{"error": "Failed to backup server. Request id: " + r_id.(string)})
+		return
+	}
+
+	c.Status(200)
+
+}
+
 type UploadPropertyRequest struct {
 	Texts string `json:"texts" binding:"required"`
 }
