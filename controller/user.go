@@ -8,6 +8,7 @@ import (
 	"go-backend/model"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -242,6 +243,14 @@ func VerifyLogin(c *gin.Context) {
 	_ = model.ReSetFail(clientIP)
 	_ = model.ClearVerificationCode(email) // 重置驗證碼
 	user, _ := model.GetUserByEmail(email)
+
+	appHeadertDeviceID := c.GetHeader(common.ClientHeader)
+	ua := strings.ToLower(c.GetHeader("User-Agent"))
+	if strings.Contains(ua, "mpmc client ua") && appHeadertDeviceID != "" {
+		SetUpAppJWT(c, user)
+		return
+	}
+
 	SetUpJWT(c, user)
 }
 

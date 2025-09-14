@@ -15,6 +15,7 @@ var (
 	Port                = flag.Int("port", 3000, "the listening port")
 	SessionSecret       = uuid.New().String()
 	CryptoSecret        = uuid.New().String()
+	HMACSecret          = "HMACSecret"
 	SQLitePath          = "DB.db?_busy_timeout=5000"
 	LogDir              = flag.String("log-dir", "./logs", "specify the log directory")
 	MemoryCacheEnabled  bool
@@ -40,9 +41,17 @@ func LoadEnv() {
 	} else {
 		CryptoSecret = SessionSecret
 	}
+
+	if os.Getenv("HMAC_SECRET") != "" {
+		HMACSecret = os.Getenv("HMAC_SECRET")
+	} else {
+		HMACSecret = SessionSecret
+	}
+
 	if os.Getenv("SQLITE_PATH") != "" {
 		SQLitePath = os.Getenv("SQLITE_PATH")
 	}
+
 	if *LogDir != "" {
 		var err error
 		*LogDir, err = filepath.Abs(*LogDir)
