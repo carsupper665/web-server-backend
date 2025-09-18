@@ -33,7 +33,8 @@ func createRootAccountForTest() error {
 		}
 		password := common.GetEnvOrDefaultString("ROOT_USER_PASSWORD", "123456")
 		username := common.GetEnvOrDefaultString("ROOT_USER_NAME", "root")
-		hashedPassword, err := common.Password2Hash(password)
+		salt := common.GetRandomString(16)
+		hashedPassword, err := common.Password2Hash(password + salt)
 		if err != nil {
 			return err
 		}
@@ -42,6 +43,7 @@ func createRootAccountForTest() error {
 			Password:    hashedPassword,
 			Email:       userEmail,
 			Role:        common.RoleRootUser,
+			Salt:        salt,
 			DisplayName: "Root User",
 			AccessToken: nil,
 		}

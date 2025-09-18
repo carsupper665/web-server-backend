@@ -71,6 +71,7 @@ func UserAgentFilter() gin.HandlerFunc {
 		"safari",
 		"opera",
 		"mozilla",
+		"mpmc client ua",
 	}
 
 	return func(c *gin.Context) {

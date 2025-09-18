@@ -4,6 +4,7 @@ package middleware
 
 import (
 	"go-backend/common"
+	"go-backend/model"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,19 @@ func ClientAppAuth() gin.HandlerFunc {
 		appHeader := c.GetHeader(common.ClientHeader)
 		if appHeader == "" {
 			c.AbortWithStatusJSON(403, gin.H{"error": "unknow error"})
+			return
+		}
+
+		exist, err := model.IsDeviceExists(appHeader)
+
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": "internal error"})
+			return
+		}
+
+		if !exist {
+			c.AbortWithStatusJSON(403, gin.H{"error": "device not recognized"})
+			common.LogWarn(c.Request.Context(), "Unrecognized device id: "+appHeader)
 			return
 		}
 
@@ -48,12 +62,15 @@ func ClientAppAuth() gin.HandlerFunc {
 		}
 
 		ip := c.ClientIP()
-		p := appHeader + uid + ip + ua
+		// p := appHeader + uid + ip + ua
+		p := ua + ip + uid + appHeader
 		h, _ := payload["tid"].(string)
 		v := common.ValidatePasswordAndHash(p, h)
 
+		common.SysDebug("tid:" + p)
+
 		if !v {
-			c.Abort()
+			c.AbortWithStatus(401)
 			return
 		}
 

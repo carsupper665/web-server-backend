@@ -169,3 +169,36 @@ func GetUserByEmail(email string) (User, error) {
 	}
 	return user, nil
 }
+
+func GetUserByName(username string) (User, error) {
+	var user User
+	err := DB.
+		Where("username = ?", username).
+		First(&user).
+		Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return User{}, err
+		}
+		return User{}, err
+	}
+	return user, nil
+}
+
+func AddUser(userName, userEmail, displayName, password string, role int) error {
+	salt := common.GetRandomString(16)
+	h, err := common.Password2Hash(password + salt)
+	if err != nil {
+		return err
+	}
+	err = DB.Create(&User{
+		Username:    userName,
+		Email:       userEmail,
+		DisplayName: displayName,
+		Password:    h,
+		Salt:        salt,
+		Role:        role,
+	}).Error
+
+	return err
+}

@@ -88,10 +88,12 @@ func AppLogin(c *gin.Context) {
 	}
 
 	_ = model.ReSetFail(clientIP)
-	if appHeadertDeviceID == "mpmc HUNS" {
+	common.SysLog("App login device id: " + appHeadertDeviceID)
+	if strings.Contains(appHeadertDeviceID, "mpmc HUNS") {
 		appHeadertDeviceID = common.GenerateDeviceIDWithIP(clientIP)
 		CreateVerificationCode(c, user) // 發送驗證碼
-		c.Writer.Header().Set(common.ClientHeader, appHeadertDeviceID)
+		c.Header(common.ClientHeader, appHeadertDeviceID)
+		common.SysLog("Generated device id for HUNS: " + appHeadertDeviceID)
 		c.JSON(202, gin.H{"message": "verification code sent, for new device"})
 		return
 	}
@@ -115,7 +117,17 @@ func SetUpAppJWT(c *gin.Context, user model.User) {
 		return
 	}
 
-	tid, err := common.Password2Hash(appHeadertDeviceID + fmt.Sprint(user.ID) + c.ClientIP() + ua)
+	parts := strings.Split(ua, "-") // userId-ver-ua
+	if len(parts) != 3 {
+		c.AbortWithStatusJSON(502, gin.H{"error": "format error"})
+		return
+	}
+
+	ua = fmt.Sprint(user.Username) + "-" + parts[1] + "-" + parts[2]
+
+	tid, err := common.Password2Hash(ua + c.ClientIP() + fmt.Sprint(user.Username) + appHeadertDeviceID)
+	common.SysDebug("tid: " + ua + c.ClientIP() + fmt.Sprint(user.Username) + appHeadertDeviceID)
+	common.SysDebug("ua: " + ua)
 
 	if err != nil {
 		c.JSON(502, gin.H{"error": "Server Error."})
@@ -146,7 +158,30 @@ func SetUpAppJWT(c *gin.Context, user model.User) {
 		ip,
 		user.ID)
 
+	common.LogInfo(c.Request.Context(), fmt.Sprintf("App user %s logged in from IP %s, device id: %s", user.Username, ip, appHeadertDeviceID))
+
+	c.Header(common.ClientHeader, appHeadertDeviceID)
 	c.SetCookie("email", "", -1, "/", "", false, true)
 	c.JSON(200, gin.H{
 		"message": "Login successful", "token": t})
+}
+
+func GetUserInfo(c *gin.Context) {
+	userName, exists := c.Get("user")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	user, err := model.GetUserByName(userName.(string))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	serverInfos, _ := model.GetUserServers(user.ID)
+
+	common.SysDebug("Get user info for user: " + user.Username)
+
+	c.JSON(200, gin.H{"user_name": user.Username, "display_name": user.DisplayName, "uid": user.ID, "role": user.Role, "email": user.Email, "servers": serverInfos})
 }

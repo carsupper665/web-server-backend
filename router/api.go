@@ -68,4 +68,10 @@ func SetAPIRouter(router *gin.Engine) {
 		testApi.GET("/:server_id/bc", c.Backup)
 	}
 
+	client := mcapi.Group("/client")
+	client.Use(middleware.ClientAppAuth())
+	{
+		client.GET("/getUserInfo", controller.GetUserInfo)
+	}
+
 }
