@@ -27,4 +27,17 @@ func SetUserRouter(router *gin.Engine) {
 		user.GET("/myservers", controller.MyServers)
 	}
 
+	admin := router.Group("/op")
+	admin.Use(
+		gzip.Gzip(gzip.DefaultCompression),
+		middleware.GloabalIPFilter(),
+		middleware.UserAgentFilter(),
+		middleware.IpRateLimiter(common.GlobalApiRateLimitNum, common.GlobalApiRateLimitDuration),
+		middleware.ClientAppAuth(),
+		middleware.AdminOnly())
+
+	{
+		admin.GET("/add", controller.AddUser)
+	}
+
 }

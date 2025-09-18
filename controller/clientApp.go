@@ -185,3 +185,28 @@ func GetUserInfo(c *gin.Context) {
 
 	c.JSON(200, gin.H{"user_name": user.Username, "display_name": user.DisplayName, "uid": user.ID, "role": user.Role, "email": user.Email, "servers": serverInfos})
 }
+
+type AddUserReq struct {
+	Username    string `json:"username" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	DisplayName string `json:"display_name"`
+	Password    string `json:"password" binding:"required,min=6"`
+	Role        int    `json:"role" binding:"required,oneof=0 1 2"`
+}
+
+func AddUser(c *gin.Context) {
+	var req AddUserReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.LogError(c.Request.Context(), "AddUser request binding error: "+err.Error())
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+	err := model.AddUser(req.Username, req.Email, req.DisplayName, req.Password, req.Role)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Add User error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "User added successfully"})
+}

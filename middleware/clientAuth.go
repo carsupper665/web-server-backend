@@ -80,3 +80,22 @@ func ClientAppAuth() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uid, exists := c.Get("user")
+
+		if !exists {
+			c.AbortWithStatus(401)
+			return
+		}
+
+		role, err := model.GetRole(uid.(uint))
+		if err != nil || role != 6 {
+			c.AbortWithStatusJSON(403, gin.H{"error": "forbidden"})
+			return
+		}
+
+		c.Next()
+	}
+}

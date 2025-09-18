@@ -5,6 +5,7 @@ package model
 import (
 	"errors"
 	"go-backend/common"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -185,6 +186,7 @@ func GetUserByName(username string) (User, error) {
 	return user, nil
 }
 
+// untested methods
 func AddUser(userName, userEmail, displayName, password string, role int) error {
 	salt := common.GetRandomString(16)
 	h, err := common.Password2Hash(password + salt)
@@ -201,4 +203,52 @@ func AddUser(userName, userEmail, displayName, password string, role int) error 
 	}).Error
 
 	return err
+}
+
+func GetRole(userID uint) (int, error) {
+	var role int
+	err := DB.Model(&User{}).Select("role").Where("id = ?", userID).Take(&role).Error
+	return role, err
+}
+
+func UpdateUser(userID uint, userName, displayName, email string, role int) error {
+	updates := map[string]interface{}{}
+
+	if userName != "" {
+		updates["username"] = userName
+	}
+
+	if displayName != "" {
+		updates["display_name"] = displayName
+	}
+
+	if role != -1 {
+		updates["role"] = role
+	}
+
+	if email != "" {
+		if _, err := GetUserByEmail(email); err == nil {
+			return errors.New("email already in use")
+		}
+
+		if strings.Contains(email, "@") {
+			updates["email"] = email
+		}
+	}
+
+	return DB.Model(&User{}).Where("id = ?", userID).Updates(updates).Error
+}
+
+func UpdatePassword(userID uint, newPassword string) error {
+	salt := common.GetRandomString(16)
+	h, err := common.Password2Hash(newPassword + salt)
+
+	if err != nil {
+		return err
+	}
+
+	return DB.Model(&User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"password": h,
+		"salt":     salt,
+	}).Error
 }
