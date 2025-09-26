@@ -29,7 +29,7 @@ func SetAmongUsIRouter(router *gin.Engine) {
 		middleware.GloabalIPFilter(),
 	)
 	{
-		pr.GET("/Join/", c.Join)
+		pr.GET("/Join/:id", c.Join)
 	}
 
 	web := auRouter.Group("/a")
