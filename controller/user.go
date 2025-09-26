@@ -366,7 +366,13 @@ func (a *AmongUs) AllGames(c *gin.Context) {
 func (a *AmongUs) Create(c *gin.Context) {
 	//admin method
 
-	gs, err := a.agm.Create()
+	num := c.Param("num")
+
+	if num == "" {
+		num = "5"
+	}
+
+	gs, err := a.agm.Create(num)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})

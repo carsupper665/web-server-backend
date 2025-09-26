@@ -12,12 +12,13 @@ type gameSession struct {
 	gid       string
 	players   map[string]*Player
 	imposster uint
-	mu        sync.RWMutex
+	// mu        sync.RWMutex
 }
 
 type Player struct {
 	ID   string
 	Role string
+	Task string
 	// mu   sync.RWMutex
 }
 
@@ -47,7 +48,7 @@ func (gm *GameManager) List() []string {
 	return gamesId
 }
 
-func (gm *GameManager) Create() (*gameSession, error) {
+func (gm *GameManager) Create(num string) (*gameSession, error) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 
@@ -55,15 +56,18 @@ func (gm *GameManager) Create() (*gameSession, error) {
 		gm.games = make(map[string]*gameSession)
 	}
 
+	n := common.GetEnvOrDefault("num", 5)
+
 	g := &gameSession{
 		gid:       common.GetRandomString(8),
 		players:   make(map[string]*Player),
-		imposster: uint(rand.Intn(6)),
+		imposster: uint(rand.Intn(n + 1)), // 0 到 n 之間
 	}
 
 	gm.games[g.gid] = g
 	return g, nil
 }
+
 func (gm *GameManager) EndGame(gid string) error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
@@ -84,27 +88,31 @@ func (gm *GameManager) Join(player, gid string) (string, error) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 
-	if _, ok := gm.games[gid]; !ok {
+	game, ok := gm.games[gid]
+	if !ok {
 		return "", fmt.Errorf("game %s not found", gid)
 	}
 
-	game := gm.games[gid]
-
+	// 已存在就直接回傳
 	if p, ok := game.players[player]; ok {
 		return p.Role, nil
 	}
 
 	role := "Crewmate"
+	task := ""
 
-	if len(game.players) == int(game.imposster)-1 {
+	if len(game.players) == int(game.imposster) {
 		role = "Impostor"
+		// 隨機一個任務
+		tasks := []string{"人頭", "死亡"}
+		task = tasks[rand.Intn(len(tasks))]
 	}
 
 	game.players[player] = &Player{
 		ID:   player,
 		Role: role,
+		Task: task,
 	}
 
 	return role, nil
-
 }
