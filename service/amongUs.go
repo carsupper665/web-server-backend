@@ -114,5 +114,5 @@ func (gm *GameManager) Join(player, gid string) (string, error) {
 		Task: task,
 	}
 
-	return role, nil
+	return role + task, nil
 }
