@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-backend/common"
 	"go-backend/model"
+	"go-backend/service"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -305,4 +306,91 @@ func Logout(c *gin.Context) {
 	// 清除 JWT Cookie
 	clearCookies(c)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
+}
+
+type AmongUs struct {
+	agm *service.GameManager
+}
+
+func NewAmongUsController(agm *service.GameManager) *AmongUs {
+	return &AmongUs{agm: agm}
+}
+
+func (a *AmongUs) Join(c *gin.Context) {
+	gameId := c.Param("id")
+	if gameId == "" {
+		c.JSON(400, gin.H{"error": "傻逼"})
+		return
+	}
+
+	clientIP := c.ClientIP()
+
+	clientDeviceID, err := c.Cookie("device_id")
+	if err != nil {
+		clientDeviceID = common.GenerateDeviceIDWithIP(clientIP)
+		c.SetCookie( // 先寫進餅乾裡 下次直接取
+			"device_id",    // name
+			clientDeviceID, // value
+			60*60*24*365,   // maxAge (秒)：一年
+			"/",            // path
+			"",             // domain (留空為當前 host)
+			false,          // secure (https 才送)
+			true,           // httpOnly
+		)
+		err = nil
+	}
+
+	role, err := a.agm.Join(clientDeviceID, gameId)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": role})
+}
+
+// admin method
+func (a *AmongUs) AllGames(c *gin.Context) {
+	//admin method
+
+	gs := a.agm.List()
+
+	c.JSON(200, gin.H{
+		"message": "all games",
+		"games":   gs,
+	})
+
+}
+
+func (a *AmongUs) Create(c *gin.Context) {
+	//admin method
+
+	gs, err := a.agm.Create()
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Create sussues", "game_id": gs.GetId()})
+}
+
+func (a *AmongUs) EndGame(c *gin.Context) {
+	//admin method
+
+	gameId := c.Param("id")
+	if gameId == "" {
+		c.JSON(400, gin.H{"error": "傻逼"})
+		return
+	}
+
+	err := a.agm.EndGame(gameId)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "傻逼"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "del"})
 }
