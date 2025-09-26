@@ -36,7 +36,7 @@ func SetAmongUsIRouter(router *gin.Engine) {
 	web.Use(middleware.ValidateJWT())
 	{
 		web.GET("/end/:id", c.EndGame)
-		web.GET("/c/:num", c.Create)
+		web.GET("/c/", c.Create)
 		web.GET("/ls", c.AllGames)
 	}
 
