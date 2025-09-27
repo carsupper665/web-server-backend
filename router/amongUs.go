@@ -38,6 +38,7 @@ func SetAmongUsIRouter(router *gin.Engine) {
 		web.GET("/end/:id", c.EndGame)
 		web.GET("/c", c.Create)
 		web.GET("/ls", c.AllGames)
+		web.GET("/ls-p/:id", c.ListPlayers)
 	}
 
 	admin := auRouter.Group("/appAdmin")

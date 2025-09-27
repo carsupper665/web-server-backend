@@ -83,7 +83,8 @@ func LoadEnv() {
 	LatestFabricInstallerVersion = GetEnvOrDefaultString("LATEST_FABRIC_INSTALLER_VERSION", "1.1.0")
 	MinecraftServerPath = GetEnvOrDefaultString("MINECRAFT_SERVER_PATH", "./minecraft_servers")
 
-	NumPlayer = GetEnvOrDefault("num", 5)
+	NumPlayer = GetEnvOrDefault("NUM", 5)
+	FoolChance = GetEnvOrDefault("CHANCE", 1000)
 
 	SetUpSMTP()
 	LoadVanillaServerUrls()

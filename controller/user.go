@@ -340,14 +340,15 @@ func (a *AmongUs) Join(c *gin.Context) {
 		err = nil
 	}
 
-	role, err := a.agm.Join(clientDeviceID, gameId)
+	role, task, taskInfo, rt, err := a.agm.Join(clientDeviceID, gameId)
+	// role, task, taskInfo, rt, err := a.agm.Join(common.GetRandomString(8), gameId)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": role})
+	c.JSON(200, gin.H{"message": role, "Task": task, "TaskInfo": taskInfo, "RoundTasks": rt})
 }
 
 // admin method
@@ -399,4 +400,22 @@ func (a *AmongUs) EndGame(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "del"})
+}
+
+func (a *AmongUs) ListPlayers(c *gin.Context) {
+	gameId := c.Param("id")
+	if gameId == "" {
+		c.JSON(400, gin.H{"error": "傻逼"})
+		return
+	}
+
+	players, err := a.agm.ListPlayers(gameId)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": players})
+
 }

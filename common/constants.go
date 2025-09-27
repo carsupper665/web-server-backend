@@ -12,7 +12,7 @@ package common
 
 const (
 	Version                 = "0.1.0"
-	Build                   = ColorBrightYellow + "bata-1.1.14c7" + ColorReset
+	Build                   = ColorBrightYellow + "bata-1.1.14c19" + ColorReset
 	SystemName              = "Server Controller"
 	ClientHeader            = "C-MPMC-APP-Header" //device id
 	AvailableClientVersions = "0.1.0"
@@ -38,6 +38,7 @@ var (
 var DCWebHookUrl string
 
 var NumPlayer int
+var FoolChance int
 
 //minecraft server constants
 var (
