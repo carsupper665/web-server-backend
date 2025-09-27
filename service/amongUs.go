@@ -24,7 +24,7 @@ type taskInfo struct {
 	Tinf string
 }
 
-var allTasks = []string{"最多人頭", "最少人頭", "最多死亡", "最少死亡", "kda1.5以下", "kda8.5以上", "cs最多", "cs最少", "戳仔"}
+var allTasks = []string{"最多人頭", "最少人頭", "最多死亡", "最少死亡", "kda1.5以下", "kda8.5以上", "cs最多", "cs最少", "戳仔", "符文智多星"}
 var info = map[string]*taskInfo{
 	"最多人頭":     {T: "最多人頭", Tinf: "以最高人頭結束遊戲"},
 	"最少人頭":     {T: "最少人頭", Tinf: "以最少人頭結束遊戲"},
@@ -35,6 +35,7 @@ var info = map[string]*taskInfo{
 	"cs最多":     {T: "cs最多", Tinf: "cs最多"},
 	"cs最少":     {T: "cs最少", Tinf: "cs最少"},
 	"戳仔":       {T: "戳仔", Tinf: "送你隊友下去"},
+	"符文智多星":    {T: "符文智多星", Tinf: "只能使用以下符文並達成條件結束遊戲:\n致命節奏觸發時間少於20秒\n靈魂收割觸發次數小於10次\n相位衝擊觸發時間少於15秒\n不死之握觸發次數少於8次\n先發制人偷取金錢少於250 "},
 }
 
 type Player struct {
