@@ -83,12 +83,13 @@ func (gm *GameManager) Create(num string) (*gameSession, error) {
 	}
 
 	n := common.NumPlayer
-	imp := uint(rand.Intn(n + 1)) // 0 到 n 之間
+	imp := uint(rand.Intn(n)) // 0 到 n 之間
 	f := -1
 	c := uint(rand.Intn(999))
+
 	if c <= uint(common.FoolChance) {
 		f = (int(imp + 1))
-		if imp == 4 {
+		if int(imp) == int(n-1) {
 			f = 0
 		}
 	}
