@@ -133,13 +133,13 @@ func (gm *GameManager) Join(player, gid string) (string, string, string, []strin
 		return "", "", "", []string{}, fmt.Errorf("game %s not found", gid)
 	}
 
-	if len(game.players) >= common.NumPlayer {
-		return "", "", "", []string{}, fmt.Errorf("game %s is full", gid)
-	}
-
 	// 已存在就直接回傳
 	if p, ok := game.players[player]; ok {
 		return p.Role, p.Task, p.TaskInf, game.roundTasks, nil
+	}
+
+	if len(game.players) >= common.NumPlayer {
+		return "", "", "", []string{}, fmt.Errorf("game %s is full", gid)
 	}
 
 	role := "Crewmate"
