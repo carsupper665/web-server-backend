@@ -380,7 +380,7 @@ func (a *AmongUs) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Create sussues", "game_id": gs.GetId()})
+	c.JSON(200, gin.H{"message": "Create sussues", "game_id": gs.ID()})
 }
 
 func (a *AmongUs) EndGame(c *gin.Context) {
