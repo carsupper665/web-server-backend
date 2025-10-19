@@ -33,3 +33,4 @@ servers/*
 # Editor/IDE
 # .idea/
 # .vscode/
+build/
